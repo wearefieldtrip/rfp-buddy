@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createRfp, fetchProfiles, fetchRfp, fetchRfps } from './api';
+import { createRfp, fetchProfiles, fetchRfp, fetchRfps, updateRfp } from './api';
 import type { CreateRfpInput } from './types';
 import { useAuth } from '../auth/useAuth';
 
@@ -26,6 +26,18 @@ export function useCreateRfp() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['rfps'] });
+    },
+  });
+}
+
+export function useUpdateRfp(id: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateRfpInput & { owner_id: string | null }) => updateRfp(id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['rfps'] });
+      void queryClient.invalidateQueries({ queryKey: ['rfps', id] });
     },
   });
 }

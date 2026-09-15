@@ -1,17 +1,53 @@
-import { Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useProfiles, useRfp } from './useRfps';
+import { RfpForm } from './RfpForm';
 import { RFP_STATUS_LABELS, WORK_TYPE_LABELS } from './types';
+import { useProfiles, useRfp, useUpdateRfp } from './useRfps';
 
 export function RfpDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: rfp, isLoading, isError } = useRfp(id ?? '');
   const { data: profiles } = useProfiles();
+  const updateRfp = useUpdateRfp(id ?? '');
+  const [isEditing, setIsEditing] = useState(false);
 
   if (isLoading) return <CircularProgress />;
   if (isError || !rfp) return <Typography color="error">RFP not found.</Typography>;
 
   const owner = profiles?.find((p) => p.id === rfp.owner_id);
+
+  if (isEditing) {
+    return (
+      <Box sx={{ maxWidth: 480 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Edit RFP
+        </Typography>
+        <Card variant="outlined">
+          <CardContent>
+            <RfpForm
+              defaultValues={{
+                title: rfp.title,
+                organization_name: rfp.organization_name,
+                due_date: rfp.due_date ?? '',
+                status: rfp.status,
+                work_types: rfp.work_types,
+              }}
+              defaultOwnerId={rfp.owner_id ?? ''}
+              submitLabel="Save Changes"
+              pendingLabel="Saving…"
+              isPending={updateRfp.isPending}
+              isError={updateRfp.isError}
+              onSubmit={async (input) => {
+                await updateRfp.mutateAsync(input);
+                setIsEditing(false);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -19,7 +55,12 @@ export function RfpDetailPage() {
         <Typography variant="h4" component="h1">
           {rfp.title}
         </Typography>
-        <Chip label={RFP_STATUS_LABELS[rfp.status]} />
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Chip label={RFP_STATUS_LABELS[rfp.status]} />
+          <Button variant="outlined" onClick={() => setIsEditing(true)}>
+            Edit
+          </Button>
+        </Stack>
       </Box>
 
       <Card variant="outlined">

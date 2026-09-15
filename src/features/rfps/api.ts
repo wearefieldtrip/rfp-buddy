@@ -37,6 +37,28 @@ export async function createRfp(input: CreateRfpInput & { owner_id: string | nul
   return data;
 }
 
+export async function updateRfp(
+  id: string,
+  input: CreateRfpInput & { owner_id: string | null },
+): Promise<Rfp> {
+  const { data, error } = await supabase
+    .from('rfps')
+    .update({
+      title: input.title,
+      organization_name: input.organization_name,
+      due_date: input.due_date || null,
+      owner_id: input.owner_id,
+      status: input.status,
+      work_types: input.work_types,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export interface ProfileOption {
   id: string;
   full_name: string | null;
