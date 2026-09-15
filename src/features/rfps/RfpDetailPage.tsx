@@ -1,6 +1,7 @@
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { RfpFilesSection } from './RfpFilesSection';
 import { RfpForm } from './RfpForm';
 import { RFP_STATUS_LABELS, WORK_TYPE_LABELS } from './types';
 import { useProfiles, useRfp, useUpdateRfp } from './useRfps';
@@ -80,6 +81,8 @@ export function RfpDetailPage() {
           </Stack>
         </CardContent>
       </Card>
+
+      <RfpFilesSection rfpId={rfp.id} />
     </Box>
   );
 }
