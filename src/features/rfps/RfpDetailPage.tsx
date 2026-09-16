@@ -1,7 +1,9 @@
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { RfpFilesSection } from './RfpFilesSection';
+import { Link as RouterLink, useParams } from 'react-router-dom';
+import { AiReviewCard } from './AiReviewCard';
+import { RfpDocumentField } from './RfpDocumentField';
 import { RfpForm } from './RfpForm';
 import { RFP_STATUS_LABELS, WORK_TYPE_LABELS } from './types';
 import { useProfiles, useRfp, useUpdateRfp } from './useRfps';
@@ -52,6 +54,15 @@ export function RfpDetailPage() {
 
   return (
     <Box>
+      <Button
+        component={RouterLink}
+        to="/rfps"
+        startIcon={<ArrowBackIcon fontSize="small" />}
+        sx={{ mb: 1 }}
+      >
+        Back to RFPs
+      </Button>
+
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
         <Typography variant="h4" component="h1">
           {rfp.title}
@@ -78,11 +89,12 @@ export function RfpDetailPage() {
                   : '—'
               }
             />
+            <RfpDocumentField rfp={rfp} />
           </Stack>
         </CardContent>
       </Card>
 
-      <RfpFilesSection rfpId={rfp.id} />
+      <AiReviewCard rfp={rfp} />
     </Box>
   );
 }

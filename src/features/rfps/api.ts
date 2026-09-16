@@ -59,6 +59,37 @@ export async function updateRfp(
   return data;
 }
 
+export async function attachRfpDocument(
+  id: string,
+  input: { drive_url: string },
+  attachedBy: string,
+): Promise<Rfp> {
+  const { data, error } = await supabase
+    .from('rfps')
+    .update({
+      document_drive_url: input.drive_url,
+      document_attached_by: attachedBy,
+      document_attached_at: new Date().toISOString(),
+      ai_review_status: 'not_scored',
+      ai_review_result: null,
+      ai_review_scored_at: null,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function scoreRfp(id: string): Promise<void> {
+  const { error } = await supabase.functions.invoke('score-rfp', {
+    body: { rfp_id: id },
+  });
+
+  if (error) throw error;
+}
+
 export interface ProfileOption {
   id: string;
   full_name: string | null;

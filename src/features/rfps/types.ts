@@ -36,6 +36,41 @@ export const createRfpSchema = z.object({
 
 export type CreateRfpInput = z.infer<typeof createRfpSchema>;
 
+export const AI_REVIEW_STATUSES = ['not_scored', 'scoring', 'completed'] as const;
+
+export const aiReviewStatusSchema = z.enum(AI_REVIEW_STATUSES);
+export type AiReviewStatus = z.infer<typeof aiReviewStatusSchema>;
+
+export const RECOMMENDATIONS = ['Go', 'Conditional Go', 'No-Go'] as const;
+export type Recommendation = (typeof RECOMMENDATIONS)[number];
+
+export interface OrgIntelligenceRow {
+  signal: string;
+  finding: string;
+  implication: string;
+}
+
+export interface RubricScore {
+  dimension: string;
+  score: number;
+  rationale: string;
+}
+
+export interface StrategicRisk {
+  risk: string;
+  guardrail: string;
+}
+
+export interface AiReviewResult {
+  recommendation: Recommendation;
+  total_score: number;
+  executive_summary: string;
+  org_intelligence: OrgIntelligenceRow[];
+  rubric: RubricScore[];
+  risks: StrategicRisk[];
+  next_steps: string[];
+}
+
 export interface Rfp {
   id: string;
   title: string;
@@ -44,6 +79,12 @@ export interface Rfp {
   owner_id: string | null;
   status: RfpStatus;
   work_types: WorkType[];
+  document_drive_url: string | null;
+  document_attached_by: string | null;
+  document_attached_at: string | null;
+  ai_review_status: AiReviewStatus;
+  ai_review_result: AiReviewResult | null;
+  ai_review_scored_at: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;

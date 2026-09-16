@@ -1,5 +1,6 @@
 import { AppBar, Box, Button, Container, Toolbar, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../features/auth/useAuth';
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -9,7 +10,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            component={RouterLink}
+            to="/"
+            sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}
+          >
             RFP Buddy
           </Typography>
           {session && (
