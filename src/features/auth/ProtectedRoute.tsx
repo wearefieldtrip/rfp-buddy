@@ -51,7 +51,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
       <CenteredMessage>
         <Typography variant="h6">No access</Typography>
         <Typography color="text.secondary">
-          Your account isn't authorized for RFP Buddy. Sign in with your Field Trip
+          Your account isn't authorized for RFP Buddy. Sign in with your Fieldtrip
           Google account, or contact an administrator if you believe this is a mistake.
         </Typography>
         <Button variant="outlined" onClick={() => void signOut()}>

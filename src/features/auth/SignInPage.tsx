@@ -19,7 +19,7 @@ export function SignInPage() {
             RFP Buddy
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 3 }}>
-            Sign in with your Field Trip Google account.
+            Sign in with your Fieldtrip Google account.
           </Typography>
           <Button variant="contained" onClick={() => void signInWithGoogle()}>
             Sign in with Google
