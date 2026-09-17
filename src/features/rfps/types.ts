@@ -36,7 +36,7 @@ export const createRfpSchema = z.object({
 
 export type CreateRfpInput = z.infer<typeof createRfpSchema>;
 
-export const AI_REVIEW_STATUSES = ['not_scored', 'scoring', 'completed'] as const;
+export const AI_REVIEW_STATUSES = ['not_scored', 'scoring', 'completed', 'failed'] as const;
 
 export const aiReviewStatusSchema = z.enum(AI_REVIEW_STATUSES);
 export type AiReviewStatus = z.infer<typeof aiReviewStatusSchema>;
@@ -71,6 +71,20 @@ export interface AiReviewResult {
   next_steps: string[];
 }
 
+export const QUESTIONS_STATUSES = ['not_generated', 'generating', 'completed', 'failed'] as const;
+
+export const questionsStatusSchema = z.enum(QUESTIONS_STATUSES);
+export type QuestionsStatus = z.infer<typeof questionsStatusSchema>;
+
+export interface ClarificationQuestion {
+  question: string;
+  rationale: string;
+}
+
+export interface QuestionsResult {
+  questions: ClarificationQuestion[];
+}
+
 export interface Rfp {
   id: string;
   title: string;
@@ -85,6 +99,11 @@ export interface Rfp {
   ai_review_status: AiReviewStatus;
   ai_review_result: AiReviewResult | null;
   ai_review_scored_at: string | null;
+  ai_review_error: string | null;
+  questions_status: QuestionsStatus;
+  questions_result: QuestionsResult | null;
+  questions_generated_at: string | null;
+  questions_error: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;

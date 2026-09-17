@@ -1,19 +1,24 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { AiReviewCard } from './AiReviewCard';
+import { DeleteRfpDialog } from './DeleteRfpDialog';
+import { QuestionsCard } from './QuestionsCard';
 import { RfpDocumentField } from './RfpDocumentField';
 import { RfpForm } from './RfpForm';
 import { RFP_STATUS_LABELS, WORK_TYPE_LABELS } from './types';
-import { useProfiles, useRfp, useUpdateRfp } from './useRfps';
+import { useDeleteRfp, useProfiles, useRfp, useUpdateRfp } from './useRfps';
 
 export function RfpDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: rfp, isLoading, isError } = useRfp(id ?? '');
   const { data: profiles } = useProfiles();
   const updateRfp = useUpdateRfp(id ?? '');
+  const deleteRfp = useDeleteRfp();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   if (isLoading) return <CircularProgress />;
   if (isError || !rfp) return <Typography color="error">RFP not found.</Typography>;
@@ -95,6 +100,24 @@ export function RfpDetailPage() {
       </Card>
 
       <AiReviewCard rfp={rfp} />
+      <QuestionsCard rfp={rfp} />
+
+      <Box sx={{ mt: 4, pt: 2, borderTop: 1, borderColor: 'divider', textAlign: 'right' }}>
+        <Button color="error" size="small" onClick={() => setIsDeleteDialogOpen(true)}>
+          Delete RFP
+        </Button>
+      </Box>
+
+      <DeleteRfpDialog
+        rfp={rfp}
+        open={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        isPending={deleteRfp.isPending}
+        onConfirm={async () => {
+          await deleteRfp.mutateAsync(rfp.id);
+          navigate('/rfps');
+        }}
+      />
     </Box>
   );
 }

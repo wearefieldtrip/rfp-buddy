@@ -4,9 +4,11 @@ import { supabase } from '../../lib/supabase';
 import {
   attachRfpDocument,
   createRfp,
+  deleteRfp,
   fetchProfiles,
   fetchRfp,
   fetchRfps,
+  generateQuestions,
   scoreRfp,
   updateRfp,
 } from './api';
@@ -95,11 +97,34 @@ export function useAttachRfpDocument(id: string) {
   });
 }
 
+export function useDeleteRfp() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteRfp(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['rfps'] });
+    },
+  });
+}
+
 export function useScoreRfp(rfp: Rfp) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: () => scoreRfp(rfp.id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['rfps', rfp.id] });
+      void queryClient.invalidateQueries({ queryKey: ['rfps'] });
+    },
+  });
+}
+
+export function useGenerateQuestions(rfp: Rfp) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => generateQuestions(rfp.id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['rfps', rfp.id] });
       void queryClient.invalidateQueries({ queryKey: ['rfps'] });

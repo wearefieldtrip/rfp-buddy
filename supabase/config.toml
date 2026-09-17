@@ -422,3 +422,9 @@ entrypoint = "./functions/score-rfp/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/score-rfp/*.html" ]
+
+[functions.generate-questions]
+enabled = true
+verify_jwt = false
+import_map = "./functions/generate-questions/deno.json"
+entrypoint = "./functions/generate-questions/index.ts"

@@ -218,10 +218,35 @@ export function AiReviewCard({ rfp }: { rfp: Rfp }) {
             color="text.secondary"
             sx={{ display: 'block', mt: 3, fontStyle: 'italic' }}
           >
-            Simulated preview — real document reading, org research, and rubric scoring will
-            replace this once the backend integration is built. A recommendation to help your
-            go/no-go decision, not a decision itself.
+            A recommendation to help your go/no-go decision, not a decision itself.
           </Typography>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (rfp.ai_review_status === 'failed') {
+    return (
+      <Card variant="outlined" sx={{ mt: 3, borderColor: 'error.main' }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box>
+              <Typography variant="h6">AI Review</Typography>
+              <Typography color="error">Scoring failed.</Typography>
+              {rfp.ai_review_error && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  {rfp.ai_review_error}
+                </Typography>
+              )}
+            </Box>
+            <Button
+              variant="contained"
+              disabled={scoreRfp.isPending}
+              onClick={() => scoreRfp.mutate()}
+            >
+              Try Again
+            </Button>
+          </Box>
         </CardContent>
       </Card>
     );

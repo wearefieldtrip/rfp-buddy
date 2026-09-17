@@ -4,13 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 import { fetchDriveDocumentText } from "../_shared/drive.ts";
 import { CORS_HEADERS, jsonResponse } from "../_shared/cors.ts";
 import { loadRfpContext } from "../_shared/rfpContext.ts";
-import { evaluateRfp } from "./perplexity.ts";
+import { generateQuestions } from "./perplexity.ts";
 
-async function runScoring(
+async function runGeneration(
   supabaseUrl: string,
   authHeader: string,
   rfpId: string,
-  organizationName: string,
   documentDriveUrl: string,
   attachedByEmail: string,
 ) {
@@ -20,23 +19,23 @@ async function runScoring(
 
   try {
     const rfpText = await fetchDriveDocumentText(documentDriveUrl, attachedByEmail);
-    const result = await evaluateRfp(rfpText, organizationName);
+    const result = await generateQuestions(rfpText);
 
     await supabase
       .from("rfps")
       .update({
-        ai_review_status: "completed",
-        ai_review_result: result,
-        ai_review_scored_at: new Date().toISOString(),
-        ai_review_error: null,
+        questions_status: "completed",
+        questions_result: result,
+        questions_generated_at: new Date().toISOString(),
+        questions_error: null,
       })
       .eq("id", rfpId);
   } catch (err) {
     await supabase
       .from("rfps")
       .update({
-        ai_review_status: "failed",
-        ai_review_error: String(err),
+        questions_status: "failed",
+        questions_error: String(err),
       })
       .eq("id", rfpId);
   }
@@ -57,28 +56,17 @@ Deno.serve(async (req: Request) => {
     { global: { headers: { Authorization: authHeader } } },
   )
     .from("rfps")
-    .update({ ai_review_status: "scoring", ai_review_error: null })
+    .update({ questions_status: "generating", questions_error: null })
     .eq("id", rfp.id);
 
   if (updateError) {
     return jsonResponse({ error: updateError.message }, 500);
   }
 
-  // Respond immediately; keep working after the response goes out so the
-  // client isn't left holding a long-running HTTP request open (the
-  // Drive fetch + Perplexity call together take under a minute, but
-  // still too long to hold a request open for).
   // @ts-expect-error EdgeRuntime is a Supabase-provided global at runtime
   EdgeRuntime.waitUntil(
-    runScoring(
-      supabaseUrl,
-      authHeader,
-      rfp.id,
-      rfp.organization_name,
-      rfp.document_drive_url,
-      attacherEmail,
-    ),
+    runGeneration(supabaseUrl, authHeader, rfp.id, rfp.document_drive_url, attacherEmail),
   );
 
-  return jsonResponse({ status: "scoring" }, 202);
+  return jsonResponse({ status: "generating" }, 202);
 });
