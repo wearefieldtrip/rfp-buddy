@@ -1,7 +1,7 @@
-# Acceptance criteria: first release (frontend foundation + RFP workspace)
+# Acceptance criteria: first release (frontend prototype)
 
 The first release is accepted when every item below holds. Everything is
-frontend-only and runs on fictional fixture data.
+frontend-only: fictional fixtures plus browser-only prototype storage.
 
 ## Tooling
 
@@ -9,8 +9,9 @@ frontend-only and runs on fictional fixture data.
 - [ ] `npm run dev` serves the app at `http://localhost:5173`.
 - [ ] `npm run lint`, `npm run typecheck`, and `npm run test` all pass.
 - [ ] The repo contains no secrets, API keys, or credentials.
-- [ ] No Supabase, Google, AI, auth, TanStack Query, React Hook Form, Zod, or MUI
-      dependency is installed.
+- [ ] No Supabase, Google, AI, auth, TanStack Query, or MUI dependency is
+      installed. React Hook Form, Zod, and `@hookform/resolvers` are the only form
+      dependencies.
 
 ## Shell and navigation
 
@@ -22,7 +23,7 @@ frontend-only and runs on fictional fixture data.
 - [ ] Non-RFP sections show a clear "not available yet" placeholder.
 - [ ] Unknown URLs show a 404 page with a link back to the pipeline.
 - [ ] A "Skip to main content" link appears on first Tab.
-- [ ] The header says the data is sample data and isn't saved.
+- [ ] The header says this is a prototype and data is saved only in this browser.
 
 ## RFP pipeline (`/rfps`)
 
@@ -50,8 +51,6 @@ frontend-only and runs on fictional fixture data.
 
 ## Other routes
 
-- [ ] `/rfps/new` is clearly labeled as a non-persistent preview, and it has no
-      inputs that look functional.
 - [ ] `/rfps/<unknown>` shows "RFP not found" with a way back, and no workspace tabs.
 
 ## RFP workspace (`/rfps/:rfpId/:section?`)
@@ -74,9 +73,8 @@ Content
 
 - [ ] **Overview:** organization, opportunity, sector, internal owner, lifecycle
       status, pursuit decision, outcome, proposal deadline, question deadline,
-      budget, service areas, and scope summary. A missing value the source
-      doesn't state shows _Not found_; a value a person hasn't provided or
-      confirmed yet shows _Needs review_.
+      budget (with note), service areas, and scope summary, following the
+      missing-value rules below.
 - [ ] **Sources:** name, type, date, and source reference, as plain text with no
       links or file actions. A notice says Google Drive connection and live file
       handling are deferred.
@@ -104,6 +102,70 @@ Content
       shows honest empty states instead of invented content.
 - [ ] Wide tables scroll horizontally inside their container, and the page never
       scrolls sideways.
+
+## RFP intake and browser-only persistence
+
+Intake (`/rfps/new`)
+
+- [ ] **New RFP** on the pipeline opens a real intake form, with the notice:
+      "Prototype data is stored only in this browser. It is not shared with your
+      team and will be replaced by secure team storage in a future release."
+- [ ] Fields: Organization / client (required, 2–120), Opportunity title
+      (required, 3–180), Sector (optional), Lifecycle status (required, default
+      Received), Pursuit decision (required, default Not decided), Proposal and
+      Question deadlines (optional dates), Budget minimum and maximum (optional
+      whole dollars ≥ 0, maximum not below minimum), Budget context / note
+      (optional, ≤ 240), Internal owner (optional, 2–120), Service areas
+      (optional, multi-select), Scope summary (optional, ≤ 1,000). Outcome isn't
+      collected.
+- [ ] An incompatible status and decision is a form error, using the rules in
+      `workflowRules.ts`. The decision field shows which decisions the status
+      allows.
+- [ ] Invalid submit shows inline errors (`aria-invalid`, described by the error
+      text) and a focused error summary whose links move focus to each field.
+      Nothing is saved.
+- [ ] "Save RFP locally" stores the RFP, opens its workspace, and replaces the
+      intake history entry so Back returns to the pipeline. The new RFP appears in
+      the pipeline.
+
+Persistence
+
+- [ ] Created and edited records survive a browser refresh.
+- [ ] Pages and components never touch `localStorage`; only the repository's
+      store module does, using the versioned key `rfp-buddy.local-rfps.v1`.
+- [ ] Editing a built-in sample stores a local override; the fixture source data
+      never changes.
+- [ ] Blocked storage or unreadable stored data shows a non-blocking notice, and
+      the built-in samples stay available.
+
+Overview edit
+
+- [ ] "Edit overview" edits the same fields as intake except the decision, which
+      is shown read-only ("Managed on the Decision tab"). All other workspace
+      tabs stay read-only.
+- [ ] A status the current decision doesn't allow is rejected with a form error.
+- [ ] Saving updates the Overview and the pipeline row, announces "Overview saved
+      in this browser.", and returns focus to "Edit overview".
+- [ ] Outcome is normalized from status (see `docs/rfp-workflow.md`).
+
+Origin labels and reset
+
+- [ ] Records are labeled **Built-in sample**, **Edited in this browser**, or
+      **Stored in this browser** in the workspace header. The pipeline labels the
+      last two.
+- [ ] Browser-local records show: "This RFP is stored locally in this browser and
+      is not shared with your team."
+- [ ] A "Local prototype data" panel below the pipeline table shows the prototype
+      notice and counts, and offers "Reset local prototype data".
+- [ ] Reset asks for confirmation in a dialog that says local RFPs and edits in
+      this browser will be removed, built-in samples remain, and it can't be
+      undone. Cancel has initial focus. After reset, every fixture is intact.
+
+Missing values
+
+- [ ] Blank proposal deadline, question deadline, or budget shows _Not found_.
+      Blank owner, sector, service areas, or scope summary shows _Needs review_.
+      Budget notes appear after the amount.
 
 ## Accessibility
 

@@ -87,13 +87,39 @@ export const RFP_OUTCOME_TONE: Record<RfpOutcome, Tone> = {
   not_applicable: 'neutral',
 }
 
-export const RFP_SECTORS = ['nonprofit', 'public_health', 'civic'] as const
+export const RFP_SECTORS = [
+  'nonprofit',
+  'public_health',
+  'civic',
+  'foundation',
+  'education',
+  'other',
+] as const
 export type RfpSector = (typeof RFP_SECTORS)[number]
 
 export const RFP_SECTOR_LABEL: Record<RfpSector, string> = {
   nonprofit: 'Nonprofit',
   public_health: 'Public health',
-  civic: 'Civic',
+  civic: 'Civic / public sector',
+  foundation: 'Foundation',
+  education: 'Education',
+  other: 'Other',
+}
+
+/** Where a record's data lives, as shown to people. */
+export const RFP_ORIGIN_KINDS = ['fixture', 'fixture_edited', 'local'] as const
+export type RfpOriginKind = (typeof RFP_ORIGIN_KINDS)[number]
+
+export const RFP_ORIGIN_LABEL: Record<RfpOriginKind, string> = {
+  fixture: 'Built-in sample',
+  fixture_edited: 'Edited in this browser',
+  local: 'Stored in this browser',
+}
+
+export const RFP_ORIGIN_TONE: Record<RfpOriginKind, Tone> = {
+  fixture: 'neutral',
+  fixture_edited: 'warning',
+  local: 'info',
 }
 
 /** The source does not state the value. Never replace with a guessed value. */
@@ -101,3 +127,11 @@ export const NOT_FOUND_LABEL = 'Not found'
 /** A person has not yet provided or confirmed the value. */
 export const NEEDS_REVIEW_LABEL = 'Needs review'
 export const UNASSIGNED_LABEL = 'Unassigned'
+
+export const RFP_FIELD_LIMITS = {
+  client: { min: 2, max: 120 },
+  opportunity: { min: 3, max: 180 },
+  owner: { min: 2, max: 120 },
+  scopeSummary: { max: 1000 },
+  budgetNote: { max: 240 },
+} as const

@@ -6,10 +6,6 @@ import type { RfpWorkspace } from '../types'
 export const rfpWorkspaceFixtures: RfpWorkspace[] = [
   {
     rfpId: 'rfp-001',
-    questionDeadline: '2026-09-30',
-    serviceAreas: ['strategy', 'research', 'campaign', 'creative', 'paid_media', 'evaluation'],
-    scopeSummary:
-      'A 12-month youth vaping prevention campaign for ages 13–18 across Harbor County: formative research with youth, creative development, paid and organic social placement, a school partner toolkit, and an evaluation plan reporting reach and attitude change.',
     sourceDocuments: [
       {
         id: 'doc-001-1',
@@ -222,10 +218,6 @@ export const rfpWorkspaceFixtures: RfpWorkspace[] = [
   },
   {
     rfpId: 'rfp-002',
-    questionDeadline: null,
-    serviceAreas: ['community_engagement', 'brand', 'creative'],
-    scopeSummary:
-      'Multilingual outreach to increase resident participation in the city’s participatory budgeting cycle, plus a refresh of the program’s name, logo, and visual identity.',
     sourceDocuments: [
       {
         id: 'doc-002-1',
@@ -407,10 +399,6 @@ export const rfpWorkspaceFixtures: RfpWorkspace[] = [
   },
   {
     rfpId: 'rfp-004',
-    questionDeadline: '2026-09-15',
-    serviceAreas: ['research', 'campaign', 'creative', 'digital', 'paid_media'],
-    scopeSummary:
-      'A statewide media campaign promoting safe infant sleep to new and expecting parents, focused on the counties with the highest rates of sleep-related infant deaths. Includes culturally tailored creative in English and Spanish, parent testing, and a paid media plan.',
     sourceDocuments: [
       {
         id: 'doc-004-1',

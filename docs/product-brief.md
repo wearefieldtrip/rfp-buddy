@@ -43,10 +43,13 @@ All users are Fieldtrip staff. There is no client-facing surface.
 - An **RFP pipeline** at `/rfps` built on fictional fixture data, with search,
   status and decision filters, status and decision badges, and empty states.
 - An **RFP detail workspace** at `/rfps/:rfpId` with tabs for Overview, Sources,
-  Requirements, Fit review, Decision, Activity, and Upcoming workflow. It is
-  read-only and uses illustrative fixtures for three RFPs.
-- Placeholder screens for New RFP, RFP detail, Question Library, Content Library,
-  Compliance, and Settings.
+  Requirements, Fit review, Decision, Activity, and Upcoming workflow, using
+  illustrative fixtures for three RFPs.
+- **Local RFP intake and Overview editing**, saved only in the current browser
+  (prototype storage, clearly labeled, resettable). This validates the intake
+  workflow before Supabase-backed team storage.
+- Placeholder screens for Question Library, Content Library, Compliance, and
+  Settings.
 - Documentation, ADRs, and engineering guardrails.
 
 ## Deferred scope

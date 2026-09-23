@@ -7,8 +7,9 @@ Read this first, then the doc relevant to your task in `docs/`.
 
 RFP Buddy is Fieldtrip's internal workspace for RFP opportunities and proposals
 (Fieldtrip serves nonprofit, public-health, and civic clients). **Current state:
-a frontend-only foundation running on local fixture data.** Only the RFP
-pipeline (`/rfps`) works.
+a frontend-only prototype.** Built-in fixtures plus browser-only `localStorage`
+prototype storage for new RFPs and Overview edits. There is no backend, auth,
+or team persistence.
 
 ## Product boundaries (non-negotiable)
 
@@ -37,6 +38,8 @@ pipeline (`/rfps`) works.
 - React Router, from the unified `react-router` package in **declarative mode**:
   `<BrowserRouter>` in `main.tsx`, `<Routes>` in `app/router.tsx`. Import from
   `"react-router"`, never `react-router-dom`.
+- React Hook Form + Zod (+ `@hookform/resolvers`) for forms; Zod also validates
+  anything read from browser storage
 - Vitest + React Testing Library + jsdom
 - ESLint (flat config) + Prettier
 
@@ -53,7 +56,6 @@ component source has been imported under its license.
 | Library                        | Add when                                                        |
 | ------------------------------ | --------------------------------------------------------------- |
 | TanStack Query                 | Supabase-backed data access (the first real async server state) |
-| React Hook Form + Zod          | Supabase-backed RFP intake (the first real form)                |
 | Supabase, Google APIs, AI SDKs | Their integration is explicitly scheduled                       |
 
 Also out of scope until requested: real auth, OCR, embeddings, vector search,
@@ -81,6 +83,25 @@ file uploads, background jobs, server or API routes, and deployment infrastructu
   No-Go, Needs Internal Input). Outcome is the final disposition (Won, Lost,
   Declined, Withdrawn, Unknown, Not applicable). Never use Pursue, Won, or Lost
   as a decision. See `docs/rfp-workflow.md` for the allowed combinations.
+- **All RFP data goes through the repository.** Pages and components use
+  `useRfpData()` / `useRfpRepository()` from `@/features/rfps`. Never read or
+  write `localStorage` outside `src/features/rfps/repository/localRfpStore.ts`,
+  and never import fixtures into pages. The repository merges fixtures, local
+  creations, and local overrides, and exposes `list`, `getById`, `create`,
+  `update`, `removeLocal`, and `resetLocalData`.
+- **Fixtures are immutable.** Editing a fixture stores a local override; it never
+  changes `rfpFixtures`. Every merged record carries `dataOrigin`
+  (`fixture` | `local`) and `isLocallyEdited`.
+- **Browser storage is a prototype, not a security boundary.** Anything in
+  `localStorage` can be read or changed by anyone with the browser. Never store
+  secrets there, and don't treat it as team data. Bump the key version
+  (`LOCAL_RFPS_STORAGE_KEY` in `src/lib/constants/storage.ts`) on incompatible
+  shape changes.
+- **Workflow rules are canonical.** Allowed status/decision pairs and outcome
+  normalization live in `src/features/rfps/workflowRules.ts`. The repository,
+  form schema, UI hints, and fixture tests all use it. Don't re-implement them.
+- **Decision is owned by the Decision tab.** Intake may set the initial decision;
+  the Overview edit form must not change it.
 - **Feature modules** live under `src/features/<name>/` and export through
   `index.ts`. Deferred features are a `README.md` only. Don't create empty
   implementation files for features that don't exist yet.

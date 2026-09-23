@@ -23,10 +23,11 @@ describe('AppRoutes', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'RFP not found' })).toBeInTheDocument()
   })
 
-  it('labels the new RFP page as a non-persistent preview', () => {
+  it('renders the local RFP intake form at /rfps/new', () => {
     renderWithRouter(<AppRoutes />, { route: '/rfps/new' })
     expect(screen.getByRole('heading', { level: 1, name: 'New RFP' })).toBeInTheDocument()
-    expect(screen.getByText(/Nothing here is saved/)).toBeInTheDocument()
+    expect(screen.getByRole('form', { name: 'New RFP intake' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save RFP locally' })).toBeInTheDocument()
   })
 
   it('renders placeholder sections', () => {

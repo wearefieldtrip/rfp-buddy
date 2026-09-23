@@ -6,7 +6,7 @@ import {
 } from 'react-aria-components'
 import { cn } from '@/lib/utils/cn'
 
-type Variant = 'primary' | 'secondary' | 'ghost'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 type Size = 'sm' | 'md'
 
 interface StyleProps {
@@ -20,6 +20,7 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   secondary:
     'border border-neutral-300 bg-white text-neutral-800 shadow-xs data-hovered:bg-neutral-50 data-pressed:bg-neutral-100',
   ghost: 'text-neutral-700 data-hovered:bg-neutral-100 data-pressed:bg-neutral-200',
+  danger: 'bg-danger-700 text-white data-hovered:bg-red-800 data-pressed:bg-red-900',
 }
 
 const SIZE_CLASSES: Record<Size, string> = {

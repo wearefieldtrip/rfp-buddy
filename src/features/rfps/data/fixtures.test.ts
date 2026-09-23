@@ -1,28 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import type { RfpDecision, RfpOutcome, RfpStatus } from '@/lib/constants/rfp'
 import { FIT_DIMENSIONS } from '@/lib/constants/rfpWorkspace'
+import { isAllowedStatusDecision, normalizeOutcome } from '../workflowRules'
 import { rfpFixtures } from './rfpFixtures'
 import { rfpWorkspaceFixtures } from './rfpWorkspaceFixtures'
 
-// Which decisions and outcomes each lifecycle status allows. Keeps the pipeline
-// and the workspace from telling contradictory stories.
-const ALLOWED: Record<RfpStatus, { decisions: RfpDecision[]; outcomes: RfpOutcome[] }> = {
-  received: { decisions: ['not_decided'], outcomes: ['not_applicable'] },
-  evaluating: {
-    decisions: ['not_decided', 'needs_internal_input', 'go', 'conditional_go'],
-    outcomes: ['not_applicable'],
-  },
-  pursuing: { decisions: ['go', 'conditional_go'], outcomes: ['not_applicable'] },
-  submitted: { decisions: ['go', 'conditional_go'], outcomes: ['unknown'] },
-  closed: { decisions: ['go', 'conditional_go'], outcomes: ['won', 'lost', 'unknown'] },
-  declined: { decisions: ['no_go'], outcomes: ['declined'] },
-  withdrawn: { decisions: ['go', 'conditional_go', 'no_go'], outcomes: ['withdrawn'] },
-}
-
 describe('RFP fixtures', () => {
+  // Uses the same canonical rules as the repository and the forms.
   it.each(rfpFixtures)('$id has a consistent status, decision, and outcome', (rfp) => {
-    expect(ALLOWED[rfp.status].decisions).toContain(rfp.decision)
-    expect(ALLOWED[rfp.status].outcomes).toContain(rfp.outcome)
+    expect(isAllowedStatusDecision(rfp.status, rfp.decision)).toBe(true)
+    expect(normalizeOutcome(rfp.status, rfp.outcome)).toBe(rfp.outcome)
+  })
+
+  it.each(rfpFixtures)('$id has a well-formed budget', ({ budget }) => {
+    for (const amount of [budget.minUsd, budget.maxUsd]) {
+      if (amount !== null) expect(Number.isSafeInteger(amount) && amount >= 0).toBe(true)
+    }
+    if (budget.minUsd !== null && budget.maxUsd !== null) {
+      expect(budget.maxUsd).toBeGreaterThanOrEqual(budget.minUsd)
+    }
   })
 
   it('has unique IDs', () => {

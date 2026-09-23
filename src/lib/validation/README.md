@@ -1,11 +1,12 @@
-# Validation (deferred)
+# Validation
 
-Not built yet. There are no forms or external data to validate.
+Zod is installed. Schemas live with the feature that owns the data rather than
+here:
 
-**Planned:** Add schema validation (e.g. Zod) together with the first real input
-boundary, most likely Supabase-backed RFP intake. Use it for form input
-(alongside a form library such as React Hook Form) and for parsing API or AI
-responses before they reach the UI.
+- `src/features/rfps/form/rfpFormSchema.ts`: intake and Overview edit forms
+  (used through React Hook Form's `zodResolver`).
+- `src/features/rfps/repository/localRfpStore.ts`: validates everything read
+  back from browser storage before it's used.
 
-Until then, status and decision values are constrained by the TypeScript unions
-in `src/lib/constants/rfp.ts`.
+Put a schema here only if several features genuinely share it. When Supabase
+arrives, validate API responses at the repository boundary the same way.

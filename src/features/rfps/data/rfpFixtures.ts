@@ -1,7 +1,7 @@
-import type { Rfp } from '../types'
+import type { RfpFields } from '../types'
 
 // Fictional sample data for local development. Not real opportunities.
-export const rfpFixtures: Rfp[] = [
+export const rfpFixtures: readonly RfpFields[] = [
   {
     id: 'rfp-001',
     client: 'Harbor County Public Health Department',
@@ -11,7 +11,11 @@ export const rfpFixtures: Rfp[] = [
     decision: 'go',
     outcome: 'not_applicable',
     proposalDeadline: '2026-10-16',
-    budget: '$250,000–$300,000',
+    questionDeadline: '2026-09-30',
+    serviceAreas: ['strategy', 'research', 'campaign', 'creative', 'paid_media', 'evaluation'],
+    scopeSummary:
+      'A 12-month youth vaping prevention campaign for ages 13–18 across Harbor County: formative research with youth, creative development, paid and organic social placement, a school partner toolkit, and an evaluation plan reporting reach and attitude change.',
+    budget: { minUsd: 250_000, maxUsd: 300_000, note: null },
     owner: 'Maya Okafor',
     updatedAt: '2026-09-22T15:40:00Z',
   },
@@ -24,7 +28,11 @@ export const rfpFixtures: Rfp[] = [
     decision: 'needs_internal_input',
     outcome: 'not_applicable',
     proposalDeadline: '2026-10-30',
-    budget: null,
+    questionDeadline: null,
+    serviceAreas: ['community_engagement', 'brand', 'creative'],
+    scopeSummary:
+      'Multilingual outreach to increase resident participation in the city’s participatory budgeting cycle, plus a refresh of the program’s name, logo, and visual identity.',
+    budget: { minUsd: null, maxUsd: null, note: null },
     owner: 'Jordan Reyes',
     updatedAt: '2026-09-21T18:05:00Z',
   },
@@ -37,7 +45,10 @@ export const rfpFixtures: Rfp[] = [
     decision: 'not_decided',
     outcome: 'not_applicable',
     proposalDeadline: null,
-    budget: 'Up to $85,000',
+    questionDeadline: null,
+    serviceAreas: [],
+    scopeSummary: null,
+    budget: { minUsd: null, maxUsd: 85_000, note: null },
     owner: null,
     updatedAt: '2026-09-23T09:12:00Z',
   },
@@ -50,7 +61,11 @@ export const rfpFixtures: Rfp[] = [
     decision: 'conditional_go',
     outcome: 'not_applicable',
     proposalDeadline: '2026-10-02',
-    budget: '$600,000',
+    questionDeadline: '2026-09-15',
+    serviceAreas: ['research', 'campaign', 'creative', 'digital', 'paid_media'],
+    scopeSummary:
+      'A statewide media campaign promoting safe infant sleep to new and expecting parents, focused on the counties with the highest rates of sleep-related infant deaths. Includes culturally tailored creative in English and Spanish, parent testing, and a paid media plan.',
+    budget: { minUsd: 600_000, maxUsd: 600_000, note: null },
     owner: 'Priya Natarajan',
     updatedAt: '2026-09-22T21:30:00Z',
   },
@@ -63,7 +78,10 @@ export const rfpFixtures: Rfp[] = [
     decision: 'go',
     outcome: 'unknown',
     proposalDeadline: '2026-09-12',
-    budget: '$40,000–$55,000',
+    questionDeadline: null,
+    serviceAreas: [],
+    scopeSummary: null,
+    budget: { minUsd: 40_000, maxUsd: 55_000, note: null },
     owner: 'Sam Whitfield',
     updatedAt: '2026-09-12T16:00:00Z',
   },
@@ -76,7 +94,10 @@ export const rfpFixtures: Rfp[] = [
     decision: 'no_go',
     outcome: 'declined',
     proposalDeadline: '2026-09-05',
-    budget: '$1.2M over 3 years',
+    questionDeadline: null,
+    serviceAreas: [],
+    scopeSummary: null,
+    budget: { minUsd: 1_200_000, maxUsd: 1_200_000, note: 'Over 3 years' },
     owner: 'Jordan Reyes',
     updatedAt: '2026-08-28T14:20:00Z',
   },
@@ -89,7 +110,10 @@ export const rfpFixtures: Rfp[] = [
     decision: 'go',
     outcome: 'won',
     proposalDeadline: '2026-07-18',
-    budget: '$120,000',
+    questionDeadline: null,
+    serviceAreas: [],
+    scopeSummary: null,
+    budget: { minUsd: 120_000, maxUsd: 120_000, note: null },
     owner: 'Maya Okafor',
     updatedAt: '2026-08-15T10:00:00Z',
   },
@@ -102,7 +126,10 @@ export const rfpFixtures: Rfp[] = [
     decision: 'go',
     outcome: 'lost',
     proposalDeadline: '2026-06-27',
-    budget: '$70,000',
+    questionDeadline: null,
+    serviceAreas: [],
+    scopeSummary: null,
+    budget: { minUsd: 70_000, maxUsd: 70_000, note: null },
     owner: 'Sam Whitfield',
     updatedAt: '2026-07-30T12:45:00Z',
   },
@@ -115,7 +142,10 @@ export const rfpFixtures: Rfp[] = [
     decision: 'not_decided',
     outcome: 'not_applicable',
     proposalDeadline: '2026-11-13',
-    budget: null,
+    questionDeadline: null,
+    serviceAreas: [],
+    scopeSummary: null,
+    budget: { minUsd: null, maxUsd: null, note: null },
     owner: null,
     updatedAt: '2026-09-23T11:02:00Z',
   },
@@ -128,12 +158,15 @@ export const rfpFixtures: Rfp[] = [
     decision: 'not_decided',
     outcome: 'not_applicable',
     proposalDeadline: '2026-10-23',
-    budget: '$350,000–$400,000',
+    questionDeadline: null,
+    serviceAreas: [],
+    scopeSummary: null,
+    budget: { minUsd: 350_000, maxUsd: 400_000, note: null },
     owner: 'Priya Natarajan',
     updatedAt: '2026-09-20T17:15:00Z',
   },
 ]
 
-export function getRfpFixtureById(rfpId: string): Rfp | undefined {
+export function getRfpFixtureById(rfpId: string): RfpFields | undefined {
   return rfpFixtures.find((rfp) => rfp.id === rfpId)
 }

@@ -1,8 +1,9 @@
 # Security and permissions
 
-> **Today:** no auth, no data store, and no integrations. Fixture data is
-> fictional. The principles below govern how auth, the data store, and
-> integrations get built later.
+> **Today:** no auth, no server-side data store, and no integrations. Fixture
+> data is fictional. The only persistence is **browser-only prototype storage**
+> (below). The principles govern how auth, the data store, and integrations get
+> built later.
 
 ## Principles
 
@@ -22,6 +23,26 @@
    email) is logged with the actor, the target, and the human confirmation that
    authorized it.
 6. **No real data in dev or test.** Fixtures and seeds are fictional.
+
+## Browser-only prototype storage (current)
+
+New RFPs and Overview edits are saved to `localStorage` in the user's own
+browser, under `rfp-buddy.local-rfps.v1`.
+
+- **Not a security boundary.** Anyone with access to the browser profile (or any
+  script on the origin) can read or change it. There is no encryption, access
+  control, or audit trail.
+- **Not team data.** It isn't shared, synced, or backed up. Clearing site data,
+  switching browsers, or using a private window loses it.
+- **Not for confidential information.** Don't enter real client names, contacts,
+  pricing, or proposal content. It is for exercising the intake and edit
+  workflow with fictional or non-sensitive data.
+- **Untrusted on read.** Stored data is parsed defensively and validated with Zod
+  before use; anything unexpected is ignored.
+- **Resettable.** "Reset local prototype data" removes everything the app stored,
+  after a confirmation.
+- **Temporary.** It will be removed when Supabase-backed team storage (with auth
+  and RLS) replaces it. See `docs/architecture.md`.
 
 ## Authentication (planned)
 

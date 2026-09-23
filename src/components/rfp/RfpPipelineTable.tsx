@@ -8,10 +8,17 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/Table'
-import type { Rfp } from '@/features/rfps'
-import { NOT_FOUND_LABEL, RFP_SECTOR_LABEL, UNASSIGNED_LABEL } from '@/lib/constants/rfp'
+import { isBrowserLocal, type Rfp } from '@/features/rfps'
+import {
+  NEEDS_REVIEW_LABEL,
+  NOT_FOUND_LABEL,
+  RFP_SECTOR_LABEL,
+  UNASSIGNED_LABEL,
+} from '@/lib/constants/rfp'
 import { formatCalendarDate, formatDate } from '@/lib/utils/formatDate'
 import { paths } from '@/routes/paths'
+import { RfpBudgetValue } from './RfpBudgetValue'
+import { RfpOriginBadge } from './RfpOriginBadge'
 import { RfpDecisionBadge, RfpLifecycleBadges } from './RfpStatusBadge'
 
 export function RfpPipelineTable({ rfps }: { rfps: readonly Rfp[] }) {
@@ -23,7 +30,7 @@ export function RfpPipelineTable({ rfps }: { rfps: readonly Rfp[] }) {
           <TableHeaderCell>Opportunity</TableHeaderCell>
           <TableHeaderCell>Status</TableHeaderCell>
           <TableHeaderCell>Decision</TableHeaderCell>
-          <TableHeaderCell>Proposal deadline</TableHeaderCell>
+          <TableHeaderCell className="whitespace-normal">Proposal deadline</TableHeaderCell>
           <TableHeaderCell>Budget</TableHeaderCell>
           <TableHeaderCell>Owner</TableHeaderCell>
           <TableHeaderCell>Updated</TableHeaderCell>
@@ -34,7 +41,13 @@ export function RfpPipelineTable({ rfps }: { rfps: readonly Rfp[] }) {
           <TableRow key={rfp.id}>
             <TableCell className="min-w-32">
               <div className="font-medium text-neutral-900">{rfp.client}</div>
-              <div className="text-xs text-neutral-500">{RFP_SECTOR_LABEL[rfp.sector]}</div>
+              <div className="text-xs text-neutral-500">
+                {rfp.sector ? (
+                  RFP_SECTOR_LABEL[rfp.sector]
+                ) : (
+                  <MissingValue label={`Sector: ${NEEDS_REVIEW_LABEL.toLowerCase()}`} />
+                )}
+              </div>
             </TableCell>
             <TableCell className="min-w-32">
               <Link
@@ -43,6 +56,11 @@ export function RfpPipelineTable({ rfps }: { rfps: readonly Rfp[] }) {
               >
                 {rfp.opportunity}
               </Link>
+              {isBrowserLocal(rfp) ? (
+                <div className="mt-1">
+                  <RfpOriginBadge rfp={rfp} />
+                </div>
+              ) : null}
             </TableCell>
             <TableCell>
               <RfpLifecycleBadges status={rfp.status} outcome={rfp.outcome} />
@@ -60,7 +78,7 @@ export function RfpPipelineTable({ rfps }: { rfps: readonly Rfp[] }) {
               )}
             </TableCell>
             <TableCell className="min-w-20">
-              {rfp.budget ?? <MissingValue label={NOT_FOUND_LABEL} />}
+              <RfpBudgetValue budget={rfp.budget} layout="stacked" />
             </TableCell>
             <TableCell>{rfp.owner ?? <MissingValue label={UNASSIGNED_LABEL} />}</TableCell>
             <TableCell className="whitespace-nowrap text-neutral-500">

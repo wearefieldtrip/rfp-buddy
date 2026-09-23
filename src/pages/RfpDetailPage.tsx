@@ -1,12 +1,20 @@
 import { ArrowLeft, FileSearch02 } from '@untitledui/icons'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { RfpOriginBadge } from '@/components/rfp/RfpOriginBadge'
 import { RfpDecisionBadge, RfpLifecycleBadges } from '@/components/rfp/RfpStatusBadge'
 import { RfpWorkspace } from '@/components/rfp/workspace/RfpWorkspace'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Notice } from '@/components/shared/Notice'
 import { LinkButton } from '@/components/ui/Button'
-import { getRfpFixtureById, getRfpWorkspaceFixture } from '@/features/rfps'
+import {
+  describeRepositoryError,
+  isBrowserLocal,
+  useRfpData,
+  useRfpRepository,
+} from '@/features/rfps'
 import { isRfpWorkspaceSection } from '@/lib/constants/rfpWorkspace'
+import { LOCAL_RECORD_NOTICE } from '@/lib/constants/storage'
 import { paths } from '@/routes/paths'
 
 const backLink = (
@@ -19,7 +27,9 @@ const backLink = (
 export function RfpDetailPage() {
   const { rfpId = '', section } = useParams()
   const navigate = useNavigate()
-  const rfp = getRfpFixtureById(rfpId)
+  const repository = useRfpRepository()
+  const { rfps } = useRfpData()
+  const rfp = rfps.find((candidate) => candidate.id === rfpId)
 
   if (!rfp) {
     return (
@@ -29,7 +39,7 @@ export function RfpDetailPage() {
           <EmptyState
             icon={<FileSearch02 className="size-6" />}
             title="We couldn't find that RFP"
-            description="It may have been removed, or the link may be incorrect."
+            description="It may have been removed, reset from this browser, or the link may be incorrect."
             action={
               <LinkButton href={paths.rfps} variant="secondary">
                 View all RFPs
@@ -55,15 +65,27 @@ export function RfpDetailPage() {
             <span>{rfp.client}</span>
             <RfpLifecycleBadges status={rfp.status} outcome={rfp.outcome} />
             <RfpDecisionBadge decision={rfp.decision} />
+            <RfpOriginBadge rfp={rfp} />
           </span>
         }
       />
+      {isBrowserLocal(rfp) ? (
+        <Notice title="Stored in this browser" className="mb-6">
+          {LOCAL_RECORD_NOTICE}
+        </Notice>
+      ) : null}
       <RfpWorkspace
         rfp={rfp}
-        workspace={getRfpWorkspaceFixture(rfp.id)}
+        workspace={repository.getWorkspace(rfp.id)}
         section={section ?? 'overview'}
         // Replace, so Back returns to the pipeline instead of stepping through tabs.
         onSectionChange={(next) => navigate(paths.rfpDetail(rfp.id, next), { replace: true })}
+        onSaveOverview={(input) => {
+          const result = repository.update(rfp.id, input)
+          return result.ok
+            ? { ok: true }
+            : { ok: false, message: describeRepositoryError(result.error) }
+        }}
       />
     </>
   )

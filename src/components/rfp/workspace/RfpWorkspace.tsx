@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Tab, TabList, TabPanel, Tabs } from '@/components/ui/Tabs'
-import type { Rfp, RfpWorkspace as RfpWorkspaceData } from '@/features/rfps'
+import type { Rfp, RfpUpdateInput, RfpWorkspace as RfpWorkspaceData } from '@/features/rfps'
 import {
   isRfpWorkspaceSection,
   RFP_WORKSPACE_SECTION_LABEL,
@@ -14,17 +14,25 @@ import { OverviewSection } from './OverviewSection'
 import { RequirementsSection } from './RequirementsSection'
 import { SourceDocumentsSection } from './SourceDocumentsSection'
 import { UpcomingWorkflowSection } from './UpcomingWorkflowSection'
+import type { RfpFormSaveOutcome } from '../RfpForm'
 
 interface RfpWorkspaceProps {
   rfp: Rfp
   workspace: RfpWorkspaceData | undefined
   section: RfpWorkspaceSection
   onSectionChange: (section: RfpWorkspaceSection) => void
+  onSaveOverview: (input: RfpUpdateInput) => RfpFormSaveOutcome
 }
 
-export function RfpWorkspace({ rfp, workspace, section, onSectionChange }: RfpWorkspaceProps) {
+export function RfpWorkspace({
+  rfp,
+  workspace,
+  section,
+  onSectionChange,
+  onSaveOverview,
+}: RfpWorkspaceProps) {
   const panels: Record<RfpWorkspaceSection, ReactNode> = {
-    overview: <OverviewSection rfp={rfp} workspace={workspace} />,
+    overview: <OverviewSection rfp={rfp} workspace={workspace} onSave={onSaveOverview} />,
     sources: <SourceDocumentsSection documents={workspace?.sourceDocuments ?? []} />,
     requirements: <RequirementsSection requirements={workspace?.requirements ?? []} />,
     'fit-review': <FitReviewSection fitReview={workspace?.fitReview ?? null} />,

@@ -14,13 +14,15 @@ interface NoticeProps {
   title: string
   children?: ReactNode
   className?: string
+  /** "alert" for errors that need immediate attention; "note" otherwise. */
+  role?: 'note' | 'alert'
 }
 
-export function Notice({ tone = 'info', title, children, className }: NoticeProps) {
+export function Notice({ tone = 'info', title, children, className, role = 'note' }: NoticeProps) {
   const Icon = tone === 'warning' ? AlertTriangle : InfoCircle
   return (
     <div
-      role="note"
+      role={role}
       className={cn('flex gap-3 rounded-lg border p-4 text-sm', TONE_CLASSES[tone], className)}
     >
       <Icon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />

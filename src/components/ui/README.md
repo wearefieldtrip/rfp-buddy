@@ -5,14 +5,17 @@ components. We build them ourselves with Tailwind CSS v4 and React Aria
 Components, and style them to loosely follow Untitled UI's look. Icons come from
 `@untitledui/icons`.
 
-| Primitive                                                                        | Built on                                  | Notes                                                                                                                 |
-| -------------------------------------------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `Button`, `LinkButton`                                                           | `react-aria-components` `Button` / `Link` | Use `LinkButton` when the action changes the URL.                                                                     |
-| `Badge`                                                                          | `<span>`                                  | Tone-based label chip.                                                                                                |
-| `Input`                                                                          | `react-aria-components` `TextField`       | Always requires a `label`; `hideLabel` keeps it for screen readers only.                                              |
-| `Table` (+ `TableHead`, `TableBody`, `TableRow`, `TableHeaderCell`, `TableCell`) | Semantic `<table>`                        | Styling only. Move to the React Aria `Table` if we need selection, sorting, or grid keyboard navigation.              |
-| `Tabs` (+ `TabList`, `Tab`, `TabPanel`)                                          | `react-aria-components` `Tabs`            | The tab list scrolls horizontally when it doesn't fit. Callers decide whether selection is local state or URL-driven. |
-| `Select`                                                                         | `react-aria-components` `Select`          | Typed string-union values.                                                                                            |
+| Primitive                                                                        | Built on                                                    | Notes                                                                                                                 |
+| -------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `Button`, `LinkButton`                                                           | `react-aria-components` `Button` / `Link`                   | Use `LinkButton` when the action changes the URL.                                                                     |
+| `Badge`                                                                          | `<span>`                                                    | Tone-based label chip.                                                                                                |
+| `Input`                                                                          | `react-aria-components` `TextField`                         | Always requires a `label`; `hideLabel` keeps it for screen readers only.                                              |
+| `Table` (+ `TableHead`, `TableBody`, `TableRow`, `TableHeaderCell`, `TableCell`) | Semantic `<table>`                                          | Styling only. Move to the React Aria `Table` if we need selection, sorting, or grid keyboard navigation.              |
+| `Tabs` (+ `TabList`, `Tab`, `TabPanel`)                                          | `react-aria-components` `Tabs`                              | The tab list scrolls horizontally when it doesn't fit. Callers decide whether selection is local state or URL-driven. |
+| `TextArea`                                                                       | `react-aria-components` `TextField` + `TextArea`            | Same label, description, and error pattern as `Input`.                                                                |
+| `CheckboxGroup` (+ `Checkbox`)                                                   | `react-aria-components` `CheckboxGroup`                     | Typed string values.                                                                                                  |
+| `ModalDialog`                                                                    | `react-aria-components` `ModalOverlay` + `Modal` + `Dialog` | Use `role="alertdialog"` for irreversible confirmations. Escape and outside clicks close it.                          |
+| `Select`                                                                         | `react-aria-components` `Select`                            | Typed string-union values.                                                                                            |
 
 ## Rules
 

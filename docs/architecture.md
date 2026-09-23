@@ -1,16 +1,18 @@
 # Architecture
 
-## Now: a frontend-only foundation
+## Now: a frontend-only prototype
 
-A single-page React app served by Vite. It has no backend, network calls,
-persistence, or auth. Data comes from fictional fixtures that are bundled with
-the app.
+A single-page React app served by Vite. It has no backend, network calls, or
+auth. Data comes from fictional fixtures bundled with the app, plus
+**browser-only prototype storage** (`localStorage`) for RFPs created or edited
+in this browser. Nothing is shared with the team.
 
 ```
 main.tsx
  └─ <BrowserRouter>                 react-router, declarative mode
      └─ <App>
          └─ <AppProviders>          React Aria RouterProvider → React Router navigate
+             │                      RfpRepositoryProvider (fixtures + browser storage)
              └─ <AppRoutes>         <Routes> tree (app/router.tsx)
                  └─ <AppShell>      sidebar + header + <Outlet>
                      └─ pages/*     compose components + feature modules
@@ -18,19 +20,19 @@ main.tsx
 
 ### Directory responsibilities
 
-| Path                           | Responsibility                                                                                                        | May import from                                      |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `src/app`                      | Root component, providers, route table                                                                                | everything                                           |
-| `src/pages`                    | One component per route. Composes, holds no domain logic.                                                             | components, features, lib, routes                    |
-| `src/components/ui`            | Generic primitives: `Button`/`LinkButton`, `Badge`, `Input`, `Table`, `Select`, `Tabs`                                | `lib/utils`, `types`                                 |
-| `src/components/shared`        | Generic composites: `EmptyState`, `StatusBadge`, `SearchInput`, `DataTablePlaceholder`, `MissingValue`, `Notice`      | `components/ui`, `lib/utils`, `types`                |
-| `src/components/layout`        | App shell, sidebar, header, page header                                                                               | ui, shared, routes                                   |
-| `src/components/rfp`           | RFP presentational components: pipeline table, filters, status/decision/outcome badges                                | ui, shared, `features/rfps`, `lib`                   |
-| `src/components/rfp/workspace` | The RFP detail workspace: tab container and one component per section                                                 | ui, shared, `components/rfp`, `features/rfps`, `lib` |
-| `src/features/<name>`          | Feature module: types, fixtures, feature logic, and later data access and hooks. Public API through `index.ts`.       | lib, types                                           |
-| `src/lib`                      | Framework-free foundations: constants (domain vocabulary), utils (`cn`, `formatDate`), and future integration clients | `types` only                                         |
-| `src/routes/paths.ts`          | Path constants and builders                                                                                           | `lib/constants` (types only)                         |
-| `src/types`                    | Cross-cutting types (`Tone`, `IsoDateString`)                                                                         | nothing                                              |
+| Path                           | Responsibility                                                                                                                                       | May import from                                      |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `src/app`                      | Root component, providers, route table                                                                                                               | everything                                           |
+| `src/pages`                    | One component per route. Composes, holds no domain logic.                                                                                            | components, features, lib, routes                    |
+| `src/components/ui`            | Generic primitives: `Button`/`LinkButton`, `Badge`, `Input`, `TextArea`, `Select`, `CheckboxGroup`, `Table`, `Tabs`, `ModalDialog`                   | `lib/utils`, `types`                                 |
+| `src/components/shared`        | Generic composites: `EmptyState`, `StatusBadge`, `SearchInput`, `DataTablePlaceholder`, `MissingValue`, `Notice`                                     | `components/ui`, `lib/utils`, `types`                |
+| `src/components/layout`        | App shell, sidebar, header, page header                                                                                                              | ui, shared, routes                                   |
+| `src/components/rfp`           | RFP components: pipeline table, filters, badges (status, decision, outcome, origin), the intake/edit form, and the local-data panel and reset dialog | ui, shared, `features/rfps`, `lib`                   |
+| `src/components/rfp/workspace` | The RFP detail workspace: tab container and one component per section                                                                                | ui, shared, `components/rfp`, `features/rfps`, `lib` |
+| `src/features/<name>`          | Feature module: types, fixtures, rules, data access, form schemas, and hooks. Public API through `index.ts`.                                         | lib, types                                           |
+| `src/lib`                      | Framework-free foundations: constants (domain vocabulary), utils (`cn`, `formatDate`), and future integration clients                                | `types` only                                         |
+| `src/routes/paths.ts`          | Path constants and builders                                                                                                                          | `lib/constants` (types only)                         |
+| `src/types`                    | Cross-cutting types (`Tone`, `IsoDateString`)                                                                                                        | nothing                                              |
 
 `src/components/rfp` holds RFP components that pages share. `features/rfps/components`
 is kept for components that stay inside the feature (for example, intake form
@@ -85,12 +87,58 @@ React Aria's `RouterProvider` is wired to React Router's `useNavigate` and
 - Unknown sections redirect (with replace) to the overview URL. Unknown RFP IDs
   show the not-found state.
 
+### Data access: the RFP repository
+
+All RFP data flows through one typed boundary in `src/features/rfps/repository/`:
+
+```
+pages / components
+   │  useRfpData()  → { rfps, storageStatus, localSummary }   (useSyncExternalStore)
+   │  useRfpRepository() → create / update / removeLocal / resetLocalData / getWorkspace
+   ▼
+rfpRepository.ts   merges fixtures + local creations + local overrides; applies workflow rules
+   ▼
+localRfpStore.ts   the ONLY code that touches localStorage; Zod-validates everything it reads
+   ▼
+localStorage["rfp-buddy.local-rfps.v1"] = { version: 1, created: [...], overrides: { [fixtureId]: {...} } }
+```
+
+- **Fixtures are immutable.** The repository copies them once and never writes
+  to them. Editing a fixture stores an override of its editable fields; the
+  decision is never overridden (the Decision tab owns it).
+- **Merged records** carry `dataOrigin: 'fixture' | 'local'` and
+  `isLocallyEdited`, which drive the origin labels (Built-in sample, Edited in
+  this browser, Stored in this browser).
+- **Workflow rules** (`src/features/rfps/workflowRules.ts`) are enforced in the
+  repository as well as the form: an incompatible status and decision is
+  rejected, and outcome is normalized from status.
+- **Failure handling.** If `localStorage` is blocked, reads return fixtures only
+  and writes return a typed `storage_unavailable` or `write_failed` error. If
+  the stored data can't be parsed or fails validation, it's ignored (status
+  `corrupted`) and replaced by the next successful save or reset. Both states
+  show a non-blocking notice.
+- **No global state library.** The repository is a small subscribable store,
+  created once in `AppProviders` and injectable in tests.
+
+### Forms
+
+- React Hook Form with `zodResolver`. One schema factory,
+  `createRfpFormSchema(mode)`, serves intake (`create`) and Overview edit
+  (`edit`). It trims and length-checks text, turns blanks into `null`, parses
+  whole-dollar budgets (commas allowed), and applies the cross-field rules
+  (budget max ≥ min, allowed status/decision).
+- `RfpForm` renders React Aria fields through `Controller`, inline errors via
+  `FieldError` (so `aria-invalid` and descriptions are wired), and an error
+  summary with links that receives focus after an invalid submit.
+- After creating an RFP, intake navigates to the new workspace with history
+  _replace_, so Back returns to the pipeline.
+
 ### State
 
-- UI state (filters) lives in local `useState`. The selected workspace tab lives
-  in the URL.
-- Fixture data is imported synchronously. We have no async server state yet,
-  so there is **no TanStack Query**.
+- UI state (filters, Overview edit mode) lives in local `useState`. The selected
+  workspace tab lives in the URL.
+- RFP data comes from the repository snapshot. It's synchronous, so there is
+  still **no TanStack Query**.
 - Pipeline data (`rfpFixtures`) and workspace data (`rfpWorkspaceFixtures`) are
   separate files joined by RFP ID. The decision _value_ exists only on `Rfp`, and
   the workspace's `DecisionRecord` holds details only, so the list and the
@@ -123,10 +171,25 @@ We'll add these libraries along with it:
 
 | Addition                                  | Trigger                                                                      |
 | ----------------------------------------- | ---------------------------------------------------------------------------- |
-| `@supabase/supabase-js` + generated types | First persisted feature (RFP intake)                                         |
+| `@supabase/supabase-js` + generated types | Replacing browser-only storage with team storage                             |
 | TanStack Query                            | Same change: server state with caching, invalidation, and optimistic updates |
-| React Hook Form + Zod                     | Same change: the intake form and validating API responses                    |
 | React Router data mode (optional)         | If route loaders simplify data fetching                                      |
+
+React Hook Form and Zod are already in place; the same form schema will be
+reused for Supabase-backed intake.
+
+### Replacing browser storage with Supabase
+
+The repository boundary exists so this swap doesn't touch pages:
+
+1. Add a Supabase-backed implementation of the `RfpRepository` operations
+   (async, behind TanStack Query hooks with the same shape as `useRfpData`).
+2. Seed the database from the fictional fixtures for local development only.
+3. Remove `localRfpStore.ts`, the reset panel, and the origin labels, or keep a
+   one-time "import my local prototype records" step if the team wants it. Never
+   import silently.
+4. Keep `workflowRules.ts` as the client-side mirror of rules enforced by
+   Postgres constraints and RLS.
 
 Constraints that won't change:
 

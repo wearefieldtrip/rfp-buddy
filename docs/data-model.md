@@ -3,21 +3,25 @@
 > **This is a concept, not a schema.** No database exists yet. Treat everything
 > here as a starting point for the Supabase design, not a contract.
 
-## What exists today (fixture types only)
+## What exists today (fixtures + browser-only prototype storage)
 
-`src/features/rfps/types.ts` defines fixture-only TypeScript types for a subset of
-the entities below. Their unions live in `src/lib/constants/rfp.ts` and
-`src/lib/constants/rfpWorkspace.ts`.
+`src/features/rfps/types.ts` defines TypeScript types for a subset of the
+entities below. Their unions live in `src/lib/constants/rfp.ts` and
+`src/lib/constants/rfpWorkspace.ts`. Records come from bundled fixtures and from
+browser-only prototype storage (see "Browser storage shape" below). No database
+exists.
 
-| Type             | Concept below  | Notes                                                                 |
-| ---------------- | -------------- | --------------------------------------------------------------------- |
-| `Rfp`            | RFP            | Pipeline fields, including `status`, `decision`, and `outcome`        |
-| `RfpWorkspace`   | RFP (detail)   | Question deadline, service areas, scope, plus the collections below   |
-| `SourceDocument` | SourceDocument | Name, type, date, and a plain-text source reference. No Drive IDs yet |
-| `RfpRequirement` | Requirement    | Every requirement has a required `citation` (document + location)     |
-| `FitReview`      | FitAssessment  | Four fixed dimensions with a qualitative rating                       |
-| `DecisionRecord` | Decision       | Details only. The decision value itself is `Rfp.decision`             |
-| `ActivityEvent`  | AuditEvent     | Static, human-attributed history                                      |
+| Type             | Concept below  | Notes                                                                                                                          |
+| ---------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `RfpFields`      | RFP            | Core fields: client, opportunity, sector, status, decision, outcome, deadlines, budget, owner, service areas, scope, updatedAt |
+| `Rfp`            | RFP            | `RfpFields` plus `dataOrigin` (`fixture` \| `local`) and `isLocallyEdited`, after merging                                      |
+| `RfpBudget`      | RFP budget     | `minUsd` and `maxUsd` (whole dollars or `null`) and an optional `note` such as "Over 3 years"                                  |
+| `RfpWorkspace`   | RFP (detail)   | Read-only review detail: the collections below. Fixture-only                                                                   |
+| `SourceDocument` | SourceDocument | Name, type, date, and a plain-text source reference. No Drive IDs yet                                                          |
+| `RfpRequirement` | Requirement    | Every requirement has a required `citation` (document + location)                                                              |
+| `FitReview`      | FitAssessment  | Four fixed dimensions with a qualitative rating                                                                                |
+| `DecisionRecord` | Decision       | Details only. The decision value itself is `Rfp.decision`                                                                      |
+| `ActivityEvent`  | AuditEvent     | Static, human-attributed history                                                                                               |
 
 ## Entities
 
@@ -25,7 +29,7 @@ the entities below. Their unions live in `src/lib/constants/rfp.ts` and
 
 The client that issues RFPs: a nonprofit, public-health agency, or civic body.
 
-- name, sector (`nonprofit` | `public_health` | `civic`), website, notes
+- name, sector (`nonprofit` | `public_health` | `civic` | `foundation` | `education` | `other`), website, notes
 - relationships: has many RFPs and contacts
 
 ### User / Membership
@@ -38,12 +42,14 @@ A Fieldtrip staff member and their role in the workspace.
 
 One opportunity.
 
-- organization, title, sector
+- organization, title, sector (optional; unselected shows "Needs review")
 - `status`: lifecycle state (`received` | `evaluating` | `pursuing` | `submitted` | `closed` | `declined` | `withdrawn`)
 - `decision`: the human pursuit decision (`not_decided` | `go` | `conditional_go` | `no_go` | `needs_internal_input`), taken from the latest _Decision_ record
 - `outcome`: final disposition (`won` | `lost` | `declined` | `withdrawn` | `unknown` | `not_applicable`)
 - See `docs/rfp-workflow.md` for which combinations are allowed
-- proposal deadline, questions deadline, budget as stated. Each is nullable, and null is shown as "Not found".
+- proposal deadline, question deadline, and budget (`minUsd`, `maxUsd`, `note`)
+  as stated. Each is nullable, and null is shown as "Not found".
+- service areas and scope summary: internal details; empty shows "Needs review".
 - owner (user)
 - source documents: Drive file references, not copies
 - created/updated timestamps and actors
@@ -118,3 +124,23 @@ An immutable record of every meaningful change and every external action.
 - Nullable means _unknown_. The UI shows "Not found" or "Needs review" and never
   a default.
 - Every table gets RLS scoped to the Fieldtrip organization and to role.
+
+## Browser storage shape (prototype only)
+
+Stored under `localStorage["rfp-buddy.local-rfps.v1"]` and validated with Zod on
+every read (`src/features/rfps/repository/localRfpStore.ts`):
+
+```ts
+{
+  version: 1,
+  created: LocalRfpRecord[],            // full RfpFields; id starts with "local-"
+  overrides: Record<fixtureId, Override> // editable fields + normalized outcome + updatedAt
+}
+```
+
+- Overrides never include `decision`; a fixture's decision can't be changed
+  locally.
+- Anything that fails to parse or validate is ignored as corrupted and replaced
+  on the next save or reset.
+- This shape is temporary and will not be migrated automatically into Supabase.
+  It holds fictional prototype data only and is not a security boundary.

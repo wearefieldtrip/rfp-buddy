@@ -64,7 +64,7 @@ export function DecisionSection({ rfp, record }: { rfp: Rfp; record: DecisionRec
       </Notice>
 
       <Card>
-        {rfp.decision === 'not_decided' || !record ? (
+        {rfp.decision === 'not_decided' ? (
           <FactList
             facts={[
               { label: 'Decision', value: <RfpDecisionBadge decision={rfp.decision} /> },
@@ -72,6 +72,16 @@ export function DecisionSection({ rfp, record }: { rfp: Rfp; record: DecisionRec
                 label: 'Rationale',
                 value: <MissingValue label={`No decision recorded · ${NEEDS_REVIEW_LABEL}`} />,
               },
+            ]}
+          />
+        ) : !record ? (
+          // A decision set at intake has no recorded rationale, maker, or date yet.
+          <FactList
+            facts={[
+              { label: 'Decision', value: <RfpDecisionBadge decision={rfp.decision} /> },
+              { label: 'Decided by', value: <MissingValue label={NEEDS_REVIEW_LABEL} /> },
+              { label: 'Date', value: <MissingValue label={NEEDS_REVIEW_LABEL} /> },
+              { label: 'Rationale', value: <MissingValue label={NEEDS_REVIEW_LABEL} /> },
             ]}
           />
         ) : (

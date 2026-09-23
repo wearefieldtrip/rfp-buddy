@@ -71,7 +71,10 @@ past them on its own.
 
 ## Allowed combinations
 
-Enforced for fixtures by `src/features/rfps/data/fixtures.test.ts`.
+Defined once in `src/features/rfps/workflowRules.ts`
+(`ALLOWED_DECISIONS_BY_STATUS`, `normalizeOutcome`) and used by the repository,
+the intake and Overview edit forms (including their hint text), and
+`fixtures.test.ts`.
 
 | Status     | Decision                                              | Outcome               |
 | ---------- | ----------------------------------------------------- | --------------------- |
@@ -83,5 +86,16 @@ Enforced for fixtures by `src/features/rfps/data/fixtures.test.ts`.
 | Declined   | No-Go                                                 | Declined              |
 | Withdrawn  | Go, Conditional Go, or No-Go                          | Withdrawn             |
 
-No stage transitions are implemented yet. Today the fixtures show RFPs at most
-stages, read-only.
+### In the prototype
+
+- **New RFPs** default to Received, Not decided, Not applicable. Intake may set a
+  different status and decision; an incompatible pair is a form error, never a
+  silent change.
+- **Outcome is never entered by hand.** When status changes, the repository sets
+  the outcome: Received, Evaluating, Pursuing → Not applicable; Submitted →
+  Unknown; Closed → keeps Won or Lost if already recorded, otherwise Unknown;
+  Declined → Declined; Withdrawn → Withdrawn.
+- **Decision** can be set at intake only. The Overview edit form can change the
+  status but not the decision, and rejects a status the current decision doesn't
+  allow. A dedicated decision-record feature will own later decision changes.
+- No other stage transitions or approval gates are implemented yet.

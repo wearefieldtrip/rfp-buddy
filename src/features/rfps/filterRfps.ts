@@ -1,5 +1,5 @@
 import type { RfpDecision, RfpStatus } from '@/lib/constants/rfp'
-import type { Rfp } from './types'
+import type { RfpFields } from './types'
 
 export const ALL = 'all'
 export type StatusFilter = RfpStatus | typeof ALL
@@ -17,7 +17,7 @@ export const DEFAULT_RFP_FILTERS: RfpFilterState = {
   decision: ALL,
 }
 
-export function filterRfps(rfps: readonly Rfp[], filters: RfpFilterState): Rfp[] {
+export function filterRfps<T extends RfpFields>(rfps: readonly T[], filters: RfpFilterState): T[] {
   const query = filters.query.trim().toLowerCase()
 
   return rfps.filter((rfp) => {

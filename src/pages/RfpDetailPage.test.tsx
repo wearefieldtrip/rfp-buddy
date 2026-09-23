@@ -1,34 +1,17 @@
 import { screen, within } from '@testing-library/react'
-import { useLocation, useNavigate } from 'react-router'
 import { describe, expect, it } from 'vitest'
-import { AppRoutes } from '@/app/router'
-import { formatCitation, getRfpWorkspaceFixture } from '@/features/rfps'
-import { renderWithRouter } from '@/test/render'
+import {
+  createRfpRepository,
+  formatCitation,
+  rfpFixtures,
+  rfpWorkspaceFixtures,
+  type RfpRepository,
+} from '@/features/rfps'
+import { chooseOption, currentPath, renderApp } from '@/test/appHarness'
+import { createMemoryStorage } from '@/test/storage'
 
-function LocationProbe() {
-  const location = useLocation()
-  const navigate = useNavigate()
-  return (
-    <>
-      <output aria-label="Current path">{location.pathname}</output>
-      <button type="button" onClick={() => navigate(-1)}>
-        Browser back
-      </button>
-    </>
-  )
-}
-
-function renderWorkspace(route: string, history?: string[]) {
-  return renderWithRouter(
-    <>
-      <AppRoutes />
-      <LocationProbe />
-    </>,
-    { route, history },
-  )
-}
-
-const currentPath = () => screen.getByRole('status', { name: 'Current path' })
+const renderWorkspace = (route: string, history?: string[], repository?: RfpRepository) =>
+  renderApp(route, { history, repository })
 
 describe('RfpDetailPage workspace', () => {
   it('renders the RFP title and organization for a valid ID', () => {
@@ -52,7 +35,7 @@ describe('RfpDetailPage workspace', () => {
   it('renders a source citation for every requirement', () => {
     renderWorkspace('/rfps/rfp-004/requirements')
     const table = screen.getByRole('table', { name: 'Requirements matrix' })
-    const requirements = getRfpWorkspaceFixture('rfp-004')?.requirements ?? []
+    const requirements = rfpWorkspaceFixtures.find((w) => w.rfpId === 'rfp-004')?.requirements ?? []
     expect(requirements.length).toBeGreaterThan(0)
 
     for (const requirement of requirements) {
@@ -126,5 +109,106 @@ describe('RfpDetailPage workspace', () => {
     renderWorkspace('/rfps/rfp-001/not-a-section')
     expect(currentPath()).toHaveTextContent(/^\/rfps\/rfp-001$/)
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+  })
+})
+
+describe('RfpDetailPage overview editing', () => {
+  const ownerField = () => screen.getByRole('textbox', { name: 'Internal owner' })
+
+  it('saves a fixture edit as a local override without changing the source fixture', async () => {
+    const original = structuredClone(rfpFixtures.find((rfp) => rfp.id === 'rfp-001'))
+    const { user } = renderWorkspace('/rfps/rfp-001', ['/rfps', '/rfps/rfp-001'])
+    expect(screen.getByText('Built-in sample')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edit overview' }))
+    expect(screen.getByText(/Managed on the Decision tab/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Pursuit decision/ })).not.toBeInTheDocument()
+    await user.clear(ownerField())
+    await user.type(ownerField(), 'Sam Whitfield')
+    await user.click(screen.getByRole('button', { name: 'Save RFP locally' }))
+
+    expect(await screen.findByText('Overview saved in this browser.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit overview' })).toHaveFocus()
+    const overview = screen.getByRole('tabpanel', { name: 'Overview' })
+    expect(within(overview).getByText('Sam Whitfield')).toBeInTheDocument()
+    expect(screen.getByText('Edited in this browser')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'This RFP is stored locally in this browser and is not shared with your team.',
+      ),
+    ).toBeInTheDocument()
+
+    expect(rfpFixtures.find((rfp) => rfp.id === 'rfp-001')).toEqual(original)
+
+    await user.click(screen.getByRole('button', { name: 'Browser back' }))
+    const row = screen.getByRole('link', { name: 'Youth Vaping Prevention Campaign' }).closest('tr')
+    expect(within(row as HTMLElement).getByText('Sam Whitfield')).toBeInTheDocument()
+    expect(within(row as HTMLElement).getByText('Edited in this browser')).toBeInTheDocument()
+  })
+
+  it('updates a local RFP in both the overview and the pipeline row', async () => {
+    const storage = createMemoryStorage()
+    const repository = createRfpRepository({
+      fixtures: rfpFixtures,
+      workspaces: rfpWorkspaceFixtures,
+      storage,
+      createId: () => 'local-test',
+    })
+    repository.create({
+      client: 'Eastside Library Foundation',
+      opportunity: 'Summer Reading Outreach',
+      sector: null,
+      status: 'received',
+      decision: 'not_decided',
+      proposalDeadline: null,
+      questionDeadline: null,
+      budget: { minUsd: null, maxUsd: null, note: null },
+      owner: null,
+      serviceAreas: [],
+      scopeSummary: null,
+    })
+
+    const { user } = renderWorkspace('/rfps/local-test', ['/rfps', '/rfps/local-test'], repository)
+    await user.click(screen.getByRole('button', { name: 'Edit overview' }))
+    await user.type(ownerField(), 'Jordan Reyes')
+    await chooseOption(user, /Lifecycle status/, 'Evaluating')
+    await user.click(screen.getByRole('button', { name: 'Save RFP locally' }))
+
+    await screen.findByText('Overview saved in this browser.')
+    const overview = screen.getByRole('tabpanel', { name: 'Overview' })
+    expect(within(overview).getByText('Jordan Reyes')).toBeInTheDocument()
+    expect(within(overview).getByText('Evaluating')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Browser back' }))
+    const row = screen.getByRole('link', { name: 'Summer Reading Outreach' }).closest('tr')
+    expect(within(row as HTMLElement).getByText('Jordan Reyes')).toBeInTheDocument()
+    expect(within(row as HTMLElement).getByText('Evaluating')).toBeInTheDocument()
+    expect(within(row as HTMLElement).getByText('Stored in this browser')).toBeInTheDocument()
+  })
+
+  it('rejects a status the current decision does not allow, and saves nothing', async () => {
+    const { user } = renderWorkspace('/rfps/rfp-004')
+    await user.click(screen.getByRole('button', { name: 'Edit overview' }))
+    expect(
+      screen.getByText(
+        'Conditional Go allows: Evaluating, Pursuing, Submitted, Closed, Withdrawn.',
+      ),
+    ).toBeInTheDocument()
+    await chooseOption(user, /Lifecycle status/, 'Declined')
+    await user.click(screen.getByRole('button', { name: 'Save RFP locally' }))
+
+    expect(
+      within(await screen.findByRole('alert')).getByText(
+        /Declined can't be used with the decision Conditional Go/,
+      ),
+    ).toBeInTheDocument()
+    expect(window.localStorage.getItem('rfp-buddy.local-rfps.v1')).toBeNull()
+  })
+
+  it('keeps other workspace tabs read-only', () => {
+    renderWorkspace('/rfps/rfp-004/decision')
+    const panel = screen.getByRole('tabpanel', { name: 'Decision' })
+    expect(within(panel).queryByRole('button')).not.toBeInTheDocument()
+    expect(within(panel).queryByRole('textbox')).not.toBeInTheDocument()
   })
 })

@@ -1,28 +1,20 @@
 import { FileSearch02, Inbox01, Plus } from '@untitledui/icons'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { LocalDataPanel, StorageStatusNotice } from '@/components/rfp/LocalDataPanel'
 import { RfpFilters } from '@/components/rfp/RfpFilters'
 import { RfpPipelineTable } from '@/components/rfp/RfpPipelineTable'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Button, LinkButton } from '@/components/ui/Button'
-import {
-  DEFAULT_RFP_FILTERS,
-  filterRfps,
-  rfpFixtures,
-  type Rfp,
-  type RfpFilterState,
-} from '@/features/rfps'
+import { DEFAULT_RFP_FILTERS, filterRfps, useRfpData, type RfpFilterState } from '@/features/rfps'
 import { paths } from '@/routes/paths'
 
 function pluralize(count: number) {
   return `${count} ${count === 1 ? 'RFP' : 'RFPs'}`
 }
 
-interface RfpPipelinePageProps {
-  rfps?: readonly Rfp[]
-}
-
-export function RfpPipelinePage({ rfps = rfpFixtures }: RfpPipelinePageProps) {
+export function RfpPipelinePage() {
+  const { rfps, storageStatus } = useRfpData()
   const [filters, setFilters] = useState<RfpFilterState>(DEFAULT_RFP_FILTERS)
 
   const visibleRfps = useMemo(
@@ -50,6 +42,10 @@ export function RfpPipelinePage({ rfps = rfpFixtures }: RfpPipelinePageProps) {
         description="Track every opportunity from intake through outcome."
         actions={newRfpButton}
       />
+
+      <div className="mb-4 empty:hidden">
+        <StorageStatusNotice status={storageStatus} />
+      </div>
 
       {rfps.length === 0 ? (
         <div className="rounded-lg border border-neutral-200 bg-white">
@@ -86,6 +82,10 @@ export function RfpPipelinePage({ rfps = rfpFixtures }: RfpPipelinePageProps) {
           )}
         </div>
       )}
+
+      <div className="mt-8">
+        <LocalDataPanel />
+      </div>
     </>
   )
 }

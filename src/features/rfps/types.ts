@@ -10,22 +10,50 @@ import type {
 } from '@/lib/constants/rfpWorkspace'
 import type { IsoDateString } from '@/types/common'
 
-export interface Rfp {
+export interface RfpBudget {
+  /** Whole US dollars. `null` when the source doesn't state it. */
+  minUsd: number | null
+  maxUsd: number | null
+  /** Context such as "Over 3 years". */
+  note: string | null
+}
+
+/** The fields every RFP record carries, whether built-in or stored locally. */
+export interface RfpFields {
   id: string
   client: string
   opportunity: string
-  sector: RfpSector
+  /** `null` until someone selects it; render as "Needs review". */
+  sector: RfpSector | null
   status: RfpStatus
   decision: RfpDecision
   outcome: RfpOutcome
-  /** `null` when the RFP does not state a deadline; render as "Not found". */
+  /** `null` when the RFP states no deadline; render as "Not found". */
   proposalDeadline: IsoDateString | null
-  /** Budget as stated in the RFP. `null` when not stated; render as "Not found". */
-  budget: string | null
-  /** `null` when no one has been assigned. */
+  /** `null` when the RFP states no question deadline; render as "Not found". */
+  questionDeadline: IsoDateString | null
+  budget: RfpBudget
+  /** `null` until someone is assigned. */
   owner: string | null
+  serviceAreas: ServiceArea[]
+  scopeSummary: string | null
   updatedAt: IsoDateString
 }
+
+export type RfpDataOrigin = 'fixture' | 'local'
+
+/** An RFP as the app sees it, after built-in fixtures and browser-local data are merged. */
+export interface Rfp extends RfpFields {
+  dataOrigin: RfpDataOrigin
+  /** True for a built-in fixture that has a local override. Always false for local records. */
+  isLocallyEdited: boolean
+}
+
+/** Fields a person can set when creating an RFP. Outcome is derived. */
+export type RfpCreateInput = Omit<RfpFields, 'id' | 'outcome' | 'updatedAt'>
+
+/** Fields a person can change from the Overview tab. Decision is owned by the Decision tab. */
+export type RfpUpdateInput = Omit<RfpCreateInput, 'decision'>
 
 /** Where a fact came from, e.g. document "RFP", location "p. 8, Evaluation Criteria". */
 export interface SourceCitation {
@@ -87,12 +115,9 @@ export interface ActivityEvent {
   occurredAt: IsoDateString
 }
 
+/** Read-only review detail for an RFP. Fixture-only in this release. */
 export interface RfpWorkspace {
   rfpId: string
-  /** `null` when the RFP states no question deadline; render as "Not found". */
-  questionDeadline: IsoDateString | null
-  serviceAreas: ServiceArea[]
-  scopeSummary: string | null
   sourceDocuments: SourceDocument[]
   requirements: RfpRequirement[]
   fitReview: FitReview | null
