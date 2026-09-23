@@ -63,12 +63,29 @@ describe('RfpPipelinePage', () => {
     const { user } = renderWithRouter(<RfpPipelinePage />)
 
     await user.click(screen.getByRole('button', { name: /Status/ }))
-    await user.click(screen.getByRole('option', { name: 'Internal review' }))
+    await user.click(screen.getByRole('option', { name: 'Declined' }))
 
     expect(screen.getByRole('status')).toHaveTextContent(`Showing 1 of ${rfpFixtures.length} RFPs`)
     expect(
-      screen.getByRole('link', { name: 'Safe Sleep Statewide Media Campaign' }),
+      screen.getByRole('link', { name: 'Fare Equity Program Community Engagement' }),
     ).toBeInTheDocument()
+  })
+
+  it('filters by pursuit decision and shows outcomes only for closed RFPs', async () => {
+    const { user } = renderWithRouter(<RfpPipelinePage />)
+
+    await user.click(screen.getByRole('button', { name: /Decision/ }))
+    await user.click(screen.getByRole('option', { name: 'Conditional Go' }))
+    expect(screen.getByRole('status')).toHaveTextContent(`Showing 1 of ${rfpFixtures.length} RFPs`)
+
+    await user.click(screen.getByRole('button', { name: /Decision/ }))
+    await user.click(screen.getByRole('option', { name: 'Go' }))
+    const wonRow = screen
+      .getByRole('link', { name: 'Patient Portal Adoption Campaign' })
+      .closest('tr')
+    expect(within(wonRow as HTMLElement).getByText('Closed')).toBeInTheDocument()
+    expect(within(wonRow as HTMLElement).getByText('Won')).toBeInTheDocument()
+    expect(screen.queryByText('Not applicable')).not.toBeInTheDocument()
   })
 
   it('shows an empty state with a New RFP action when the pipeline is empty', () => {

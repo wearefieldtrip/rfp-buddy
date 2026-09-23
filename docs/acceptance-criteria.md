@@ -1,6 +1,7 @@
-# Acceptance criteria: first release (frontend foundation)
+# Acceptance criteria: first release (frontend foundation + RFP workspace)
 
-The foundation is accepted when every item below holds.
+The first release is accepted when every item below holds. Everything is
+frontend-only and runs on fictional fixture data.
 
 ## Tooling
 
@@ -30,6 +31,11 @@ The foundation is accepted when every item below holds.
       deadline, Budget, Owner, and Updated.
 - [ ] Status and Decision render as colored badges with text labels, so color is
       never the only signal.
+- [ ] Status uses the lifecycle values (Received, Evaluating, Pursuing, Submitted,
+      Closed, Declined, Withdrawn), and Decision uses the pursuit values (Not
+      decided, Go, Conditional Go, No-Go, Needs Internal Input). Won and Lost never
+      appear as decisions.
+- [ ] Closed RFPs show their outcome (Won, Lost, or Unknown) next to the Closed status.
 - [ ] A missing deadline or budget shows _Not found_, and a missing owner shows
       _Unassigned_.
 - [ ] Search matches client, opportunity, and owner, ignoring case.
@@ -46,9 +52,58 @@ The foundation is accepted when every item below holds.
 
 - [ ] `/rfps/new` is clearly labeled as a non-persistent preview, and it has no
       inputs that look functional.
-- [ ] `/rfps/:rfpId` shows the RFP title, client, badges, and a "workspace coming
-      next" placeholder.
-- [ ] `/rfps/<unknown>` shows "RFP not found" with a way back.
+- [ ] `/rfps/<unknown>` shows "RFP not found" with a way back, and no workspace tabs.
+
+## RFP workspace (`/rfps/:rfpId/:section?`)
+
+Navigation
+
+- [ ] The header shows the back link, opportunity title, organization, status
+      (with outcome when closed), and decision.
+- [ ] Tabs, in order: Overview, Sources, Requirements, Fit review, Decision,
+      Activity, Upcoming. The tab list scrolls horizontally on narrow screens.
+- [ ] Each tab has its own URL (e.g. `/rfps/rfp-001/requirements`), and opening
+      that URL directly selects the tab. Overview's URL is `/rfps/:rfpId`.
+- [ ] An unknown section redirects to the overview URL.
+- [ ] Switching tabs replaces the history entry, so browser Back returns to the
+      pipeline rather than the previous tab.
+- [ ] Tabs work with the keyboard (arrow keys, Home and End) and show a visible
+      focus ring.
+
+Content
+
+- [ ] **Overview:** organization, opportunity, sector, internal owner, lifecycle
+      status, pursuit decision, outcome, proposal deadline, question deadline,
+      budget, service areas, and scope summary. A missing value the source
+      doesn't state shows _Not found_; a value a person hasn't provided or
+      confirmed yet shows _Needs review_.
+- [ ] **Sources:** name, type, date, and source reference, as plain text with no
+      links or file actions. A notice says Google Drive connection and live file
+      handling are deferred.
+- [ ] **Requirements:** a matrix with Requirement, Type, Source, Owner, Status, and
+      Notes columns. Every requirement shows a citation such as "RFP, p. 8, §6
+      Evaluation Criteria" or "Addendum 1, §2 …". Status uses Not started, In
+      progress, Addressed, At risk, and Needs review. Type includes Clarification.
+- [ ] **Fit review:** a notice says the content is illustrative fixture data, not
+      an AI assessment. Dimensions appear in exactly this order: Mission
+      Alignment, Budget & Value Health, Scope & Boundaries, Timeline & Capacity.
+      Each shows a rating, summary, evidence, risks, unknowns, and recommended
+      conditions ("None identified" when empty).
+- [ ] **Decision:** read-only, with no form or save controls. Shows the decision,
+      decision maker, date, and rationale. Conditional Go shows its conditions to
+      pursue, and Needs Internal Input shows the input needed. An undecided RFP
+      shows "No decision recorded".
+- [ ] **Activity:** a notice says it is static fixture history. Events are listed
+      newest first, each attributed to a named person. No event implies that AI or
+      a live integration acted.
+- [ ] **Upcoming:** Questions, Proposal, and Compliance cards explain what will be
+      added and state that the integration is deferred. They have no buttons or
+      links.
+- [ ] rfp-001 (Go), rfp-002 (Needs Internal Input), and rfp-004 (Conditional Go,
+      with an addendum citation) have full workspace fixtures. Every other RFP
+      shows honest empty states instead of invented content.
+- [ ] Wide tables scroll horizontally inside their container, and the page never
+      scrolls sideways.
 
 ## Accessibility
 

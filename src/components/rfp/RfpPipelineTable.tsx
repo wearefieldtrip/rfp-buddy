@@ -1,4 +1,5 @@
 import { Link } from 'react-aria-components'
+import { MissingValue } from '@/components/shared/MissingValue'
 import {
   Table,
   TableBody,
@@ -8,27 +9,10 @@ import {
   TableRow,
 } from '@/components/ui/Table'
 import type { Rfp } from '@/features/rfps'
-import { NOT_FOUND_LABEL, RFP_SECTOR_LABEL } from '@/lib/constants/rfp'
+import { NOT_FOUND_LABEL, RFP_SECTOR_LABEL, UNASSIGNED_LABEL } from '@/lib/constants/rfp'
+import { formatCalendarDate, formatDate } from '@/lib/utils/formatDate'
 import { paths } from '@/routes/paths'
-import { RfpDecisionBadge, RfpStatusBadge } from './RfpStatusBadge'
-
-// Date-only values are calendar dates, so format in UTC to avoid off-by-one shifts.
-const deadlineFormat = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
-
-const updatedFormat = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-})
-
-function Missing({ label }: { label: string }) {
-  return <span className="text-neutral-500 italic">{label}</span>
-}
+import { RfpDecisionBadge, RfpLifecycleBadges } from './RfpStatusBadge'
 
 export function RfpPipelineTable({ rfps }: { rfps: readonly Rfp[] }) {
   return (
@@ -48,11 +32,11 @@ export function RfpPipelineTable({ rfps }: { rfps: readonly Rfp[] }) {
       <TableBody>
         {rfps.map((rfp) => (
           <TableRow key={rfp.id}>
-            <TableCell className="min-w-36">
+            <TableCell className="min-w-32">
               <div className="font-medium text-neutral-900">{rfp.client}</div>
               <div className="text-xs text-neutral-500">{RFP_SECTOR_LABEL[rfp.sector]}</div>
             </TableCell>
-            <TableCell className="min-w-40">
+            <TableCell className="min-w-32">
               <Link
                 href={paths.rfpDetail(rfp.id)}
                 className="rounded-sm font-medium text-neutral-900 underline-offset-4 outline-none data-focus-visible:ring-2 data-focus-visible:ring-accent-500 data-hovered:underline"
@@ -61,7 +45,7 @@ export function RfpPipelineTable({ rfps }: { rfps: readonly Rfp[] }) {
               </Link>
             </TableCell>
             <TableCell>
-              <RfpStatusBadge status={rfp.status} />
+              <RfpLifecycleBadges status={rfp.status} outcome={rfp.outcome} />
             </TableCell>
             <TableCell>
               <RfpDecisionBadge decision={rfp.decision} />
@@ -69,18 +53,18 @@ export function RfpPipelineTable({ rfps }: { rfps: readonly Rfp[] }) {
             <TableCell className="whitespace-nowrap">
               {rfp.proposalDeadline ? (
                 <time dateTime={rfp.proposalDeadline}>
-                  {deadlineFormat.format(new Date(rfp.proposalDeadline))}
+                  {formatCalendarDate(rfp.proposalDeadline)}
                 </time>
               ) : (
-                <Missing label={NOT_FOUND_LABEL} />
+                <MissingValue label={NOT_FOUND_LABEL} />
               )}
             </TableCell>
             <TableCell className="min-w-20">
-              {rfp.budget ?? <Missing label={NOT_FOUND_LABEL} />}
+              {rfp.budget ?? <MissingValue label={NOT_FOUND_LABEL} />}
             </TableCell>
-            <TableCell>{rfp.owner ?? <Missing label="Unassigned" />}</TableCell>
+            <TableCell>{rfp.owner ?? <MissingValue label={UNASSIGNED_LABEL} />}</TableCell>
             <TableCell className="whitespace-nowrap text-neutral-500">
-              <time dateTime={rfp.updatedAt}>{updatedFormat.format(new Date(rfp.updatedAt))}</time>
+              <time dateTime={rfp.updatedAt}>{formatDate(rfp.updatedAt)}</time>
             </TableCell>
           </TableRow>
         ))}

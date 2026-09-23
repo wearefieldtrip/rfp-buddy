@@ -1,11 +1,12 @@
-import { ArrowLeft, FileSearch02, LayoutAlt01 } from '@untitledui/icons'
-import { useParams } from 'react-router'
+import { ArrowLeft, FileSearch02 } from '@untitledui/icons'
+import { Navigate, useNavigate, useParams } from 'react-router'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { RfpDecisionBadge, RfpStatusBadge } from '@/components/rfp/RfpStatusBadge'
-import { DataTablePlaceholder } from '@/components/shared/DataTablePlaceholder'
+import { RfpDecisionBadge, RfpLifecycleBadges } from '@/components/rfp/RfpStatusBadge'
+import { RfpWorkspace } from '@/components/rfp/workspace/RfpWorkspace'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { LinkButton } from '@/components/ui/Button'
-import { getRfpFixtureById } from '@/features/rfps'
+import { getRfpFixtureById, getRfpWorkspaceFixture } from '@/features/rfps'
+import { isRfpWorkspaceSection } from '@/lib/constants/rfpWorkspace'
 import { paths } from '@/routes/paths'
 
 const backLink = (
@@ -16,7 +17,8 @@ const backLink = (
 )
 
 export function RfpDetailPage() {
-  const { rfpId = '' } = useParams()
+  const { rfpId = '', section } = useParams()
+  const navigate = useNavigate()
   const rfp = getRfpFixtureById(rfpId)
 
   if (!rfp) {
@@ -39,6 +41,10 @@ export function RfpDetailPage() {
     )
   }
 
+  if (section !== undefined && !isRfpWorkspaceSection(section)) {
+    return <Navigate to={paths.rfpDetail(rfp.id)} replace />
+  }
+
   return (
     <>
       <PageHeader
@@ -47,15 +53,17 @@ export function RfpDetailPage() {
         description={
           <span className="flex flex-wrap items-center gap-2">
             <span>{rfp.client}</span>
-            <RfpStatusBadge status={rfp.status} />
+            <RfpLifecycleBadges status={rfp.status} outcome={rfp.outcome} />
             <RfpDecisionBadge decision={rfp.decision} />
           </span>
         }
       />
-      <DataTablePlaceholder
-        icon={<LayoutAlt01 className="size-6" />}
-        title="RFP workspace coming next"
-        description="Requirements, fit assessment, question log, and compliance checks for this opportunity will live here."
+      <RfpWorkspace
+        rfp={rfp}
+        workspace={getRfpWorkspaceFixture(rfp.id)}
+        section={section ?? 'overview'}
+        // Replace, so Back returns to the pipeline instead of stepping through tabs.
+        onSectionChange={(next) => navigate(paths.rfpDetail(rfp.id, next), { replace: true })}
       />
     </>
   )

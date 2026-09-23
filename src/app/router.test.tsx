@@ -10,12 +10,12 @@ describe('AppRoutes', () => {
     expect(screen.getByRole('link', { name: 'RFPs' })).toHaveAttribute('aria-current', 'page')
   })
 
-  it('renders an RFP detail page with the workspace placeholder', () => {
+  it('renders the RFP detail workspace', () => {
     renderWithRouter(<AppRoutes />, { route: '/rfps/rfp-004' })
     expect(
       screen.getByRole('heading', { level: 1, name: 'Safe Sleep Statewide Media Campaign' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('RFP workspace coming next')).toBeInTheDocument()
+    expect(screen.getByRole('tablist', { name: 'RFP workspace sections' })).toBeInTheDocument()
   })
 
   it('handles an unknown RFP id', () => {

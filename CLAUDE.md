@@ -69,9 +69,18 @@ file uploads, background jobs, server or API routes, and deployment infrastructu
   - `components/rfp` and `features/rfps` hold RFP logic.
   - `pages` compose those.
   - `lib` must not import from `features` or `components`.
-- **Central domain vocabulary.** RFP status, decision, and sector unions, and
-  their labels and tones, live in `src/lib/constants/rfp.ts`. Don't hard-code
-  status strings or badge colors anywhere else.
+- **Central domain vocabulary.** RFP status, decision, outcome, and sector unions,
+  and their labels and tones, live in `src/lib/constants/rfp.ts`. Workspace
+  vocabulary (sections, requirement types and statuses, fit dimensions and
+  ratings, source-document and activity types, service areas) lives in
+  `src/lib/constants/rfpWorkspace.ts`. Don't hard-code these strings or badge
+  colors anywhere else.
+- **Status, decision, and outcome are separate.** Status is the lifecycle
+  (Received → Evaluating → Pursuing → Submitted → Closed, or Declined/Withdrawn).
+  Decision is the human go/no-go judgment (Not decided, Go, Conditional Go,
+  No-Go, Needs Internal Input). Outcome is the final disposition (Won, Lost,
+  Declined, Withdrawn, Unknown, Not applicable). Never use Pursue, Won, or Lost
+  as a decision. See `docs/rfp-workflow.md` for the allowed combinations.
 - **Feature modules** live under `src/features/<name>/` and export through
   `index.ts`. Deferred features are a `README.md` only. Don't create empty
   implementation files for features that don't exist yet.

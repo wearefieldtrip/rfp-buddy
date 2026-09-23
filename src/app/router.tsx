@@ -14,7 +14,7 @@ export function AppRoutes() {
         <Route index element={<Navigate to={paths.rfps} replace />} />
         <Route path={paths.rfps} element={<RfpPipelinePage />} />
         <Route path={paths.newRfp} element={<NewRfpPage />} />
-        <Route path="/rfps/:rfpId" element={<RfpDetailPage />} />
+        <Route path={paths.rfpDetailPattern} element={<RfpDetailPage />} />
         <Route
           path={paths.questionLibrary}
           element={

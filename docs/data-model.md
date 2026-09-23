@@ -1,9 +1,23 @@
 # Conceptual data model
 
-> **This is a concept, not a schema.** No database exists yet. The only
-> implemented type is `Rfp` in `src/features/rfps/types.ts`, and it is a
-> simplified, fixture-only version of the RFP entity below. Treat everything here
-> as a starting point for the Supabase design, not a contract.
+> **This is a concept, not a schema.** No database exists yet. Treat everything
+> here as a starting point for the Supabase design, not a contract.
+
+## What exists today (fixture types only)
+
+`src/features/rfps/types.ts` defines fixture-only TypeScript types for a subset of
+the entities below. Their unions live in `src/lib/constants/rfp.ts` and
+`src/lib/constants/rfpWorkspace.ts`.
+
+| Type             | Concept below  | Notes                                                                 |
+| ---------------- | -------------- | --------------------------------------------------------------------- |
+| `Rfp`            | RFP            | Pipeline fields, including `status`, `decision`, and `outcome`        |
+| `RfpWorkspace`   | RFP (detail)   | Question deadline, service areas, scope, plus the collections below   |
+| `SourceDocument` | SourceDocument | Name, type, date, and a plain-text source reference. No Drive IDs yet |
+| `RfpRequirement` | Requirement    | Every requirement has a required `citation` (document + location)     |
+| `FitReview`      | FitAssessment  | Four fixed dimensions with a qualitative rating                       |
+| `DecisionRecord` | Decision       | Details only. The decision value itself is `Rfp.decision`             |
+| `ActivityEvent`  | AuditEvent     | Static, human-attributed history                                      |
 
 ## Entities
 
@@ -25,8 +39,10 @@ A Fieldtrip staff member and their role in the workspace.
 One opportunity.
 
 - organization, title, sector
-- `status`: workflow stage (`intake` → `fit_review` → `drafting` → `internal_review` → `submitted` → `closed`)
-- `decision`: current go/no-go and outcome (`pending` | `pursue` | `no_go` | `won` | `lost`), derived from the latest _Decision_ record
+- `status`: lifecycle state (`received` | `evaluating` | `pursuing` | `submitted` | `closed` | `declined` | `withdrawn`)
+- `decision`: the human pursuit decision (`not_decided` | `go` | `conditional_go` | `no_go` | `needs_internal_input`), taken from the latest _Decision_ record
+- `outcome`: final disposition (`won` | `lost` | `declined` | `withdrawn` | `unknown` | `not_applicable`)
+- See `docs/rfp-workflow.md` for which combinations are allowed
 - proposal deadline, questions deadline, budget as stated. Each is nullable, and null is shown as "Not found".
 - owner (user)
 - source documents: Drive file references, not copies
@@ -42,23 +58,30 @@ A pointer to a file in Google Drive (the original RFP, addenda, or attachments).
 
 A discrete obligation extracted from the RFP.
 
-- RFP, category (deliverable, eligibility, format, submission, evaluation), text
-- **citation**: source document, page or section, and a quoted excerpt
-- `review_status`: `needs_review` | `accepted` | `rejected`
+- RFP, type (`submission` | `format` | `eligibility` | `deliverable` | `evaluation` | `contractual` | `clarification`), text
+- `clarification` covers material unknowns that need a client answer, an addendum, or internal interpretation before the team can responsibly proceed
+- **citation**: source document and location (page or section). A quoted excerpt comes later.
+- `status`: `not_started` | `in_progress` | `addressed` | `at_risk` | `needs_review`
+- owner, notes
 - origin: `human` | `ai_suggested`
 
 ### FitAssessment
 
-Scored criteria that inform the go/no-go decision.
+A structured review that informs the go/no-go decision.
 
-- RFP, criteria scores with rationale and citations, overall recommendation
-- origin, reviewer, reviewed at
+- RFP, reviewer, reviewed at, origin
+- Four dimensions, always in this order: Mission Alignment, Budget & Value Health,
+  Scope & Boundaries, Timeline & Capacity
+- Per dimension: rating (`strong` | `moderate` | `weak` | `needs_review`), summary,
+  evidence, risks, unknowns, and recommended conditions
 
 ### Decision
 
 An append-only log of human decisions.
 
 - RFP, type (`go_no_go` | `submit_approval` | `outcome`), value, rationale, decided by, decided at
+- For `go_no_go`: conditions to pursue (required for Conditional Go) and input
+  needed (required for Needs Internal Input)
 - Only a person can create one.
 
 ### Question

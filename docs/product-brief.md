@@ -42,6 +42,9 @@ All users are Fieldtrip staff. There is no client-facing surface.
 - App shell with sidebar navigation and header.
 - An **RFP pipeline** at `/rfps` built on fictional fixture data, with search,
   status and decision filters, status and decision badges, and empty states.
+- An **RFP detail workspace** at `/rfps/:rfpId` with tabs for Overview, Sources,
+  Requirements, Fit review, Decision, Activity, and Upcoming workflow. It is
+  read-only and uses illustrative fixtures for three RFPs.
 - Placeholder screens for New RFP, RFP detail, Question Library, Content Library,
   Compliance, and Settings.
 - Documentation, ADRs, and engineering guardrails.

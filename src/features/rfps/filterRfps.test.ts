@@ -21,10 +21,10 @@ describe('filterRfps', () => {
   it('combines status and decision filters', () => {
     const result = filterRfps(rfpFixtures, {
       ...DEFAULT_RFP_FILTERS,
-      status: 'closed',
-      decision: 'won',
+      status: 'evaluating',
+      decision: 'not_decided',
     })
-    expect(result.map((rfp) => rfp.id)).toEqual(['rfp-007'])
+    expect(result.map((rfp) => rfp.id)).toEqual(['rfp-010'])
   })
 
   it('returns an empty list when nothing matches', () => {
@@ -35,6 +35,6 @@ describe('filterRfps', () => {
 describe('hasActiveFilters', () => {
   it('ignores whitespace-only queries', () => {
     expect(hasActiveFilters({ ...DEFAULT_RFP_FILTERS, query: '   ' })).toBe(false)
-    expect(hasActiveFilters({ ...DEFAULT_RFP_FILTERS, status: 'drafting' })).toBe(true)
+    expect(hasActiveFilters({ ...DEFAULT_RFP_FILTERS, status: 'pursuing' })).toBe(true)
   })
 })

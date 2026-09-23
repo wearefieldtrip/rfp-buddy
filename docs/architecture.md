@@ -18,18 +18,19 @@ main.tsx
 
 ### Directory responsibilities
 
-| Path                    | Responsibility                                                                                                    | May import from                              |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `src/app`               | Root component, providers, route table                                                                            | everything                                   |
-| `src/pages`             | One component per route. Composes, holds no domain logic.                                                         | components, features, lib, routes            |
-| `src/components/ui`     | Generic primitives: `Button`/`LinkButton`, `Badge`, `Input`, `Table`, `Select`                                    | `lib/utils`, `types`                         |
-| `src/components/shared` | Generic composites: `EmptyState`, `StatusBadge`, `SearchInput`, `DataTablePlaceholder`                            | `components/ui`, `lib/utils`, `types`        |
-| `src/components/layout` | App shell, sidebar, header, page header                                                                           | ui, shared, routes                           |
-| `src/components/rfp`    | RFP presentational components (pipeline table, filters, status and decision badges)                               | ui, shared, `features/rfps`, `lib/constants` |
-| `src/features/<name>`   | Feature module: types, data access, feature logic, and later hooks and components. Public API through `index.ts`. | lib, types                                   |
-| `src/lib`               | Framework-free foundations: constants, utils, and future integration clients                                      | `types` only                                 |
-| `src/routes/paths.ts`   | Path constants and builders                                                                                       | nothing                                      |
-| `src/types`             | Cross-cutting types (`Tone`, `IsoDateString`)                                                                     | nothing                                      |
+| Path                           | Responsibility                                                                                                        | May import from                                      |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `src/app`                      | Root component, providers, route table                                                                                | everything                                           |
+| `src/pages`                    | One component per route. Composes, holds no domain logic.                                                             | components, features, lib, routes                    |
+| `src/components/ui`            | Generic primitives: `Button`/`LinkButton`, `Badge`, `Input`, `Table`, `Select`, `Tabs`                                | `lib/utils`, `types`                                 |
+| `src/components/shared`        | Generic composites: `EmptyState`, `StatusBadge`, `SearchInput`, `DataTablePlaceholder`, `MissingValue`, `Notice`      | `components/ui`, `lib/utils`, `types`                |
+| `src/components/layout`        | App shell, sidebar, header, page header                                                                               | ui, shared, routes                                   |
+| `src/components/rfp`           | RFP presentational components: pipeline table, filters, status/decision/outcome badges                                | ui, shared, `features/rfps`, `lib`                   |
+| `src/components/rfp/workspace` | The RFP detail workspace: tab container and one component per section                                                 | ui, shared, `components/rfp`, `features/rfps`, `lib` |
+| `src/features/<name>`          | Feature module: types, fixtures, feature logic, and later data access and hooks. Public API through `index.ts`.       | lib, types                                           |
+| `src/lib`                      | Framework-free foundations: constants (domain vocabulary), utils (`cn`, `formatDate`), and future integration clients | `types` only                                         |
+| `src/routes/paths.ts`          | Path constants and builders                                                                                           | `lib/constants` (types only)                         |
+| `src/types`                    | Cross-cutting types (`Tone`, `IsoDateString`)                                                                         | nothing                                              |
 
 `src/components/rfp` holds RFP components that pages share. `features/rfps/components`
 is kept for components that stay inside the feature (for example, intake form
@@ -69,11 +70,32 @@ https://reactrouter.com/start/declarative/installation.
 React Aria's `RouterProvider` is wired to React Router's `useNavigate` and
 `useHref`, so `LinkButton` and other React Aria links navigate client-side.
 
+#### RFP workspace tabs
+
+- The detail route is `/rfps/:rfpId/:section?` (`paths.rfpDetailPattern`). Section
+  keys come from `RFP_WORKSPACE_SECTIONS` in `src/lib/constants/rfpWorkspace.ts`.
+  Build URLs with `paths.rfpDetail(rfpId, section)`. Overview has no segment.
+- The URL is the source of truth for the selected tab: React Aria `Tabs` is
+  controlled by `selectedKey`, and `onSelectionChange` calls
+  `navigate(..., { replace: true })`.
+- Replacing (rather than pushing) history means browser Back leaves the
+  workspace and returns to the pipeline instead of stepping back through tabs.
+  The trade-off is that tabs are buttons, so they can't be middle-clicked into a
+  new window. Every tab's URL can still be copied and shared.
+- Unknown sections redirect (with replace) to the overview URL. Unknown RFP IDs
+  show the not-found state.
+
 ### State
 
-- UI state (filters) lives in local `useState`.
+- UI state (filters) lives in local `useState`. The selected workspace tab lives
+  in the URL.
 - Fixture data is imported synchronously. We have no async server state yet,
   so there is **no TanStack Query**.
+- Pipeline data (`rfpFixtures`) and workspace data (`rfpWorkspaceFixtures`) are
+  separate files joined by RFP ID. The decision _value_ exists only on `Rfp`, and
+  the workspace's `DecisionRecord` holds details only, so the list and the
+  workspace can't show different decisions. `fixtures.test.ts` also checks that
+  status, decision, and outcome combinations follow `docs/rfp-workflow.md`.
 
 ### Testing
 
